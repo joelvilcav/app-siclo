@@ -1,0 +1,15 @@
+import type React from "react"
+import { DashboardLayout } from "@/components/dashboard-layout"
+import { AuthGuard } from "@/components/auth-guard"
+
+export default function SettingsLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <AuthGuard>
+      <DashboardLayout>{children}</DashboardLayout>
+    </AuthGuard>
+  )
+}
