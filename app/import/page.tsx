@@ -1,30 +1,75 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download } from "lucide-react"
-import { useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Upload,
+  FileSpreadsheet,
+  CheckCircle,
+  AlertCircle,
+  Download,
+} from "lucide-react";
+import { useState } from "react";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function ImportPage() {
-  const [uploadedFiles, setUploadedFiles] = useState<{ [key: string]: File | null }>({
-    clases: null,
-    compras: null,
-  })
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    [key: string]: File | null;
+  }>({
+    class: null,
+    purchases: null,
+  });
 
-  const handleFileUpload = (type: "clases" | "compras", file: File | null) => {
+  const handleFileUpload = (type: "class" | "purchases", file: File | null) => {
     setUploadedFiles((prev) => ({
       ...prev,
       [type]: file,
-    }))
-  }
+    }));
+  };
+
+  const uploadFile = async (type: "class" | "purchases") => {
+    console.log('Uploading File');
+    const file = uploadedFiles[type];
+    if (!file) return;
+
+    console.log('pase?');
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch(
+        type === "class"
+          ? `${API_BASE_URL}/files/upload/reservations`
+          : `${API_BASE_URL}/files/upload/purchases`, // Falta modificar esto
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) throw new Error("Error en el POST");
+
+      const result = await res.json();
+      console.log("Éxito:", result);
+      alert(`Archivo de ${type} subido con éxito ✅`);
+    } catch (err) {
+      console.error(err);
+      alert(`Error al subir ${type} ❌`);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-[#1F2937]">Importar Datos</h2>
-        <p className="text-[#6B7280] mt-1">Importa datos de clases y compras desde archivos Excel</p>
+        <h2 className="text-2xl font-semibold text-[#1F2937]">
+          Importar Datos
+        </h2>
+        <p className="text-[#6B7280] mt-1">
+          Importa datos de clases y compras desde archivos Excel
+        </p>
       </div>
 
       <Tabs defaultValue="clases" className="space-y-6">
@@ -56,25 +101,37 @@ export default function ImportPage() {
                 <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-8 text-center">
                   <Upload className="w-12 h-12 text-[#6B7280] mx-auto mb-4" />
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-[#1F2937]">Arrastra tu archivo Excel aquí</p>
-                    <p className="text-xs text-[#6B7280]">o haz clic para seleccionar</p>
+                    <p className="text-sm font-medium text-[#1F2937]">
+                      Arrastra tu archivo Excel aquí
+                    </p>
+                    <p className="text-xs text-[#6B7280]">
+                      o haz clic para seleccionar
+                    </p>
                   </div>
                   <Input
                     type="file"
                     accept=".xlsx,.xls"
                     className="mt-4"
-                    onChange={(e) => handleFileUpload("clases", e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      handleFileUpload("class", e.target.files?.[0] || null)
+                    }
                   />
                 </div>
 
-                {uploadedFiles.clases && (
+                {uploadedFiles.class && (
                   <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-800">{uploadedFiles.clases.name}</span>
+                    <span className="text-sm text-green-800">
+                      {uploadedFiles.class.name}
+                    </span>
                   </div>
                 )}
 
-                <Button className="w-full bg-[#6366F1] hover:bg-[#5B5BD6]" disabled={!uploadedFiles.clases}>
+                <Button
+                  className="w-full bg-[#6366F1] hover:bg-[#5B5BD6] cursor-pointer"
+                  disabled={!uploadedFiles.class}
+                  onClick={() => uploadFile("class")}
+                >
                   Procesar Archivo de Clases
                 </Button>
               </CardContent>
@@ -82,11 +139,15 @@ export default function ImportPage() {
 
             <Card className="bg-[#F8FAFC] shadow-sm border border-[#E5E7EB]">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-[#1F2937]">Formato Requerido - Clases</CardTitle>
+                <CardTitle className="text-lg font-semibold text-[#1F2937]">
+                  Formato Requerido - Clases
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-sm">
-                  <p className="font-medium text-[#1F2937]">Columnas requeridas:</p>
+                  <p className="font-medium text-[#1F2937]">
+                    Columnas requeridas:
+                  </p>
                   <ul className="space-y-1 text-[#6B7280]">
                     <li>• ID Reserva</li>
                     <li>• ID Clase</li>
@@ -103,7 +164,11 @@ export default function ImportPage() {
                     <li>• Método de Pago</li>
                     <li>• Estatus</li>
                   </ul>
-                  <Button variant="outline" size="sm" className="mt-4 bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 bg-transparent"
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     Descargar Plantilla
                   </Button>
@@ -126,25 +191,37 @@ export default function ImportPage() {
                 <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-8 text-center">
                   <Upload className="w-12 h-12 text-[#6B7280] mx-auto mb-4" />
                   <div className="space-y-2">
-                    <p className="text-sm font-medium text-[#1F2937]">Arrastra tu archivo Excel aquí</p>
-                    <p className="text-xs text-[#6B7280]">o haz clic para seleccionar</p>
+                    <p className="text-sm font-medium text-[#1F2937]">
+                      Arrastra tu archivo Excel aquí
+                    </p>
+                    <p className="text-xs text-[#6B7280]">
+                      o haz clic para seleccionar
+                    </p>
                   </div>
                   <Input
                     type="file"
                     accept=".xlsx,.xls"
                     className="mt-4"
-                    onChange={(e) => handleFileUpload("compras", e.target.files?.[0] || null)}
+                    onChange={(e) =>
+                      handleFileUpload("purchases", e.target.files?.[0] || null)
+                    }
                   />
                 </div>
 
-                {uploadedFiles.compras && (
+                {uploadedFiles.purchases && (
                   <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-800">{uploadedFiles.compras.name}</span>
+                    <span className="text-sm text-green-800">
+                      {uploadedFiles.purchases.name}
+                    </span>
                   </div>
                 )}
 
-                <Button className="w-full bg-[#6366F1] hover:bg-[#5B5BD6]" disabled={!uploadedFiles.compras}>
+                <Button
+                  className="w-full bg-[#6366F1] hover:bg-[#5B5BD6]"
+                  disabled={!uploadedFiles.purchases}
+                  onClick={() => uploadFile("purchases")}
+                >
                   Procesar Archivo de Compras
                 </Button>
               </CardContent>
@@ -152,11 +229,15 @@ export default function ImportPage() {
 
             <Card className="bg-[#F8FAFC] shadow-sm border border-[#E5E7EB]">
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-[#1F2937]">Formato Requerido - Compras</CardTitle>
+                <CardTitle className="text-lg font-semibold text-[#1F2937]">
+                  Formato Requerido - Compras
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3 text-sm">
-                  <p className="font-medium text-[#1F2937]">Columnas principales:</p>
+                  <p className="font-medium text-[#1F2937]">
+                    Columnas principales:
+                  </p>
                   <ul className="space-y-1 text-[#6B7280] max-h-48 overflow-y-auto">
                     <li>• Fecha de compra</li>
                     <li>• Fecha de acreditación</li>
@@ -173,7 +254,11 @@ export default function ImportPage() {
                     <li>• Monto recibido</li>
                     <li>• Medio de pago</li>
                   </ul>
-                  <Button variant="outline" size="sm" className="mt-4 bg-transparent">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 bg-transparent"
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     Descargar Plantilla
                   </Button>
@@ -187,7 +272,9 @@ export default function ImportPage() {
       {/* Historial de importaciones */}
       <Card className="bg-[#F8FAFC] shadow-sm border border-[#E5E7EB]">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-[#1F2937]">Historial de Importaciones</CardTitle>
+          <CardTitle className="text-lg font-semibold text-[#1F2937]">
+            Historial de Importaciones
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -195,8 +282,12 @@ export default function ImportPage() {
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <div>
-                  <p className="text-sm font-medium text-[#1F2937]">clases_enero_2024.xlsx</p>
-                  <p className="text-xs text-[#6B7280]">Importado el 15 Ene 2024 - 1,247 registros</p>
+                  <p className="text-sm font-medium text-[#1F2937]">
+                    clases_enero_2024.xlsx
+                  </p>
+                  <p className="text-xs text-[#6B7280]">
+                    Importado el 15 Ene 2024 - 1,247 registros
+                  </p>
                 </div>
               </div>
               <Button variant="outline" size="sm">
@@ -208,8 +299,12 @@ export default function ImportPage() {
               <div className="flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-600" />
                 <div>
-                  <p className="text-sm font-medium text-[#1F2937]">compras_diciembre_2023.xlsx</p>
-                  <p className="text-xs text-[#6B7280]">Importado el 10 Ene 2024 - 892 registros (3 errores)</p>
+                  <p className="text-sm font-medium text-[#1F2937]">
+                    compras_diciembre_2023.xlsx
+                  </p>
+                  <p className="text-xs text-[#6B7280]">
+                    Importado el 10 Ene 2024 - 892 registros (3 errores)
+                  </p>
                 </div>
               </div>
               <Button variant="outline" size="sm">
@@ -220,5 +315,5 @@ export default function ImportPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
