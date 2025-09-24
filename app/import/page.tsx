@@ -15,6 +15,8 @@ import { useState } from "react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+// TODO: Crear un TYPE para "class | purchases"
+
 export default function ImportPage() {
   const [uploadedFiles, setUploadedFiles] = useState<{
     [key: string]: File | null;
