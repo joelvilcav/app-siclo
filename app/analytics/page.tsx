@@ -330,9 +330,9 @@ export default function AnalyticsPage() {
           </Select>
 
           <div className="flex items-center gap-2">
-            <Input type="date" className="w-[140px] h-9" />
+            <Input type="date" className="w-[160px] h-9" />
             <span className="text-muted-foreground text-sm">a</span>
-            <Input type="date" className="w-[140px] h-9" />
+            <Input type="date" className="w-[160px] h-9" />
           </div>
         </div>
       </div>
