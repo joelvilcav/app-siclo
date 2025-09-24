@@ -21,7 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 const ingresosPorEstudio = [
   { name: "Lun", miraflores: 2500, sanIsidro: 3200, surco: 1800, limaCentro: 2100 },
@@ -227,10 +227,60 @@ const metodosPago = [
   { metodo: "Efectivo", transacciones: 132, monto: "S/13,200", porcentaje: 13 },
 ]
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function AnalyticsPage() {
   const [currentPageVIP, setCurrentPageVIP] = useState(1)
   const [currentPageInactivos, setCurrentPageInactivos] = useState(1)
   const [currentPageInstructores, setCurrentPageInstructores] = useState(1)
+
+  const [dataStudio, setDataStudio] = useState<any[]>([]);
+  const [dataInstructor, setDataInstructor] = useState<any[]>([]);
+  const [dataDiscipline, setDataDiscipline] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [from, setFrom] = useState("2025-07-07");
+  const [to, setTo] = useState("2025-07-20");
+
+  const fetchReports = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // TODO: Fijar las fechas con el selector, por ahora -> hardcodeado
+        const from = "2025-07-07";
+        const to = "2025-07-20";
+
+        const [resStudio, resInstructor, resDiscipline] = await Promise.all([
+          fetch(`${API_BASE_URL}/reports/reservations?groupBy=studio&from=${from}&to=${to}`),
+          fetch(`${API_BASE_URL}/reports/reservations?groupBy=instructor&from=${from}&to=${to}`),
+          fetch(`${API_BASE_URL}/reports/reservations?groupBy=discipline&from=${from}&to=${to}`),
+        ]);
+
+        if (!resStudio.ok || !resInstructor.ok || !resDiscipline.ok) {
+          throw new Error("Error en alguna petición");
+        }
+
+        const [studio, instructor, discipline] = await Promise.all([
+          resStudio.json(),
+          resInstructor.json(),
+          resDiscipline.json(),
+        ]);
+
+        setDataStudio(studio);
+        setDataInstructor(instructor);
+        setDataDiscipline(discipline);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
   const itemsPerPage = 3
 
   const paginate = (items: any[], currentPage: number) => {
