@@ -251,10 +251,19 @@ export default function AnalyticsPage() {
         const from = "2025-07-07";
         const to = "2025-07-20";
 
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No hay token, inicia sesión");
+
         const [resStudio, resInstructor, resDiscipline] = await Promise.all([
-          fetch(`${API_BASE_URL}/reports/reservations?groupBy=studio&from=${from}&to=${to}`),
-          fetch(`${API_BASE_URL}/reports/reservations?groupBy=instructor&from=${from}&to=${to}`),
-          fetch(`${API_BASE_URL}/reports/reservations?groupBy=discipline&from=${from}&to=${to}`),
+          fetch(`${API_BASE_URL}/reports/reservations?groupBy=studio&from=${from}&to=${to}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_BASE_URL}/reports/reservations?groupBy=instructor&from=${from}&to=${to}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_BASE_URL}/reports/reservations?groupBy=discipline&from=${from}&to=${to}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         if (!resStudio.ok || !resInstructor.ok || !resDiscipline.ok) {
