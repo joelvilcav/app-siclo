@@ -107,15 +107,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="/placeholder-user.png" />
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {user?.name
-                      ?.split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase() || "U"}
+                    {user?.firstName || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-sm hidden sm:block">
-                  <div className="font-medium text-header-foreground">{user?.name || "Usuario"}</div>
+                  <div className="font-medium text-header-foreground">{user ? `${user.firstName} ${user.lastName}` : "Usuario"}</div>
                   <div className="text-xs text-muted-foreground">{user?.email || "usuario@email.com"}</div>
                 </div>
               </div>
