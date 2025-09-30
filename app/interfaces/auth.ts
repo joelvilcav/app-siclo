@@ -4,6 +4,6 @@ export interface LoginResponse {
   token: string;
   user: User;
   expiresIn: number;
-  type: string; // normalmente "Bearer"
+  type: string;
 }
 

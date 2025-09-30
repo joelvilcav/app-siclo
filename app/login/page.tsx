@@ -13,11 +13,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth()
   const router = useRouter()
@@ -28,7 +28,7 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const success = await login(email, password)
+      const success = await login({ username, password });
       if (success) {
         router.push("/analytics")
       } else {
@@ -56,13 +56,13 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Usuario</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="h-11"
               />
@@ -106,16 +106,6 @@ export default function LoginPage() {
               {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
             </Button>
           </form>
-
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <p className="text-sm text-muted-foreground text-center">
-              <strong>Credenciales de prueba:</strong>
-              <br />
-              Email: test@test.com
-              <br />
-              Contraseña: test123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>
