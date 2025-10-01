@@ -23,17 +23,7 @@ import {
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { useReports } from "@/hooks/use-reports"
-import { transformReportResponse } from "@/lib/transform-report"
-
-const ingresosPorEstudio = [
-  { name: "Lun", miraflores: 2500, sanIsidro: 3200, surco: 1800, limaCentro: 2100 },
-  { name: "Mar", miraflores: 2800, sanIsidro: 3500, surco: 2100, limaCentro: 2400 },
-  { name: "Mié", miraflores: 3200, sanIsidro: 4100, surco: 2400, limaCentro: 2800 },
-  { name: "Jue", miraflores: 2900, sanIsidro: 3800, surco: 2200, limaCentro: 2600 },
-  { name: "Vie", miraflores: 3500, sanIsidro: 4200, surco: 2600, limaCentro: 3100 },
-  { name: "Sáb", miraflores: 4200, sanIsidro: 5100, surco: 3200, limaCentro: 3800 },
-  { name: "Dom", miraflores: 3100, sanIsidro: 3900, surco: 2400, limaCentro: 2900 },
-]
+import { getSeriesKeys, transformReportResponse } from "@/lib/transform-report"
 
 const reservasPorMes = [
   { name: "Ene", reservasConfirmadas: 450, reservasCanceladas: 45, reservasPendientes: 25 },
@@ -249,9 +239,11 @@ export default function AnalyticsPage() {
   }, []);
 
   const dataStudioChart = dataStudio ? transformReportResponse(dataStudio) : [];
-  const seriesKeys = Object.keys(dataStudioChart[0] || {}).filter(
-    (key) => key !== "name"
-  );
+  const dataDisciplineChart = dataDiscipline ? transformReportResponse(dataDiscipline) : [];
+  const dataInstructorChart = dataInstructor ? transformReportResponse(dataInstructor) : [];
+
+  console.log('dataInstructorChart', dataInstructorChart);
+
   const itemsPerPage = 3
 
   const paginate = (items: any[], currentPage: number) => {
@@ -449,7 +441,7 @@ export default function AnalyticsPage() {
                       tickFormatter={(value) => `${value}`}
                     />
                     <Tooltip />
-                    {seriesKeys.map((key, index) => (
+                    {getSeriesKeys(dataStudioChart).map((key, index) => (
                       <Area
                         key={key}
                         type="monotone"
@@ -469,11 +461,11 @@ export default function AnalyticsPage() {
 
             <Card className="bg-card shadow-sm border border-border">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-card-foreground">Estado de Reservas</CardTitle>
+                <CardTitle className="text-lg font-semibold text-card-foreground">Reservaciones por Disciplina</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={reservasPorMes}>
+                  <AreaChart data={dataDisciplineChart}>
                     <defs>
                       <linearGradient id="colorConfirmadas" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
@@ -485,29 +477,31 @@ export default function AnalyticsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6B7280" }} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12, fill: "#6B7280" }}
+                      ticks={
+                        dataDisciplineChart.length > 0
+                        ? [dataDisciplineChart[0]?.name, dataDisciplineChart[dataDisciplineChart.length - 1]?.name]
+                        : []
+                      }
+                      tickFormatter={(value) => String(value)}
+                    />
                     <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
                     <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="reservasConfirmadas"
-                      stroke="#10B981"
-                      fillOpacity={1}
-                      fill="url(#colorConfirmadas)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Confirmadas"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="reservasCanceladas"
-                      stroke="#EF4444"
-                      fillOpacity={1}
-                      fill="url(#colorCanceladas)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Canceladas"
-                    />
+                    {getSeriesKeys(dataDisciplineChart).map((key, index) => (
+                      <Area
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={colors[index % colors.length].stroke}
+                        fillOpacity={1}
+                        fill={colors[index % colors.length].fill}
+                        strokeWidth={2}
+                        dot={false}
+                        name={key}
+                      />
+                    ))}
                   </AreaChart>
                 </ResponsiveContainer>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 text-sm gap-2">
@@ -525,6 +519,66 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
           </div>
+
+          <Card className="bg-card shadow-sm border border-border">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-card-foreground">Reservaciones por Instructor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={transaccionesMercadoPago}>
+                  <defs>
+                    <linearGradient id="colorAprobadas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorPendientes" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorRechazadas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6B7280" }} />
+                  <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="aprobadas"
+                    stroke="#10B981"
+                    fillOpacity={1}
+                    fill="url(#colorAprobadas)"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Aprobadas"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="pendientes"
+                    stroke="#F59E0B"
+                    fillOpacity={1}
+                    fill="url(#colorPendientes)"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Pendientes"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="rechazadas"
+                    stroke="#EF4444"
+                    fillOpacity={1}
+                    fill="url(#colorRechazadas)"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Rechazadas"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
           <Card className="bg-card shadow-sm border border-border">
             <CardHeader className="pb-4">

@@ -29,3 +29,9 @@ export function transformReportResponse(response: ReportResponse): ChartPoint[] 
 
   return result;
 }
+
+export function getSeriesKeys(data: ChartPoint[]) {
+  return Object.keys(data[0] || {}).filter(
+      (key) => key !== "name"
+  );
+}
