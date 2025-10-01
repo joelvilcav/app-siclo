@@ -225,10 +225,13 @@ export default function AnalyticsPage() {
   const [currentPageInstructores, setCurrentPageInstructores] = useState(1)
 
   const [hidden, setHidden] = useState<{ [key: string]: boolean }>({});
+  const [startDate, setStartDate] = useState("2025-07-07");
+  const [endDate, setEndDate] = useState("2025-07-20");
   const { dataStudio, dataInstructor, dataDiscipline, loading, error, fetchReports } = useReports();
 
   useEffect(() => {
-    fetchReports("2025-07-07", "2025-07-20");
+    console.log('Ejecutándome again!');
+    fetchReports(startDate, endDate);
   }, []);
 
   const dataStudioChart = dataStudio ? transformReportResponse(dataStudio) : [];
@@ -244,7 +247,6 @@ export default function AnalyticsPage() {
       [dataKey]: !prev[dataKey],
     }));
   };
-
 
   const paginate = (items: any[], currentPage: number) => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -293,10 +295,14 @@ export default function AnalyticsPage() {
           </Select>
 
           <div className="flex items-center gap-2">
-            <Input type="date" className="w-[160px] h-9" />
+            <Input type="date" className="w-[160px] h-9" onChange={(e) => setStartDate(e.target.value)}/>
             <span className="text-muted-foreground text-sm">a</span>
-            <Input type="date" className="w-[160px] h-9" />
+            <Input type="date" className="w-[160px] h-9" onChange={(e) => setEndDate(e.target.value)}/>
           </div>
+
+          <Button size="sm" className="h-9 px-4" onClick={() => fetchReports(startDate, endDate)}>
+            Aplicar
+          </Button>
         </div>
       </div>
 
