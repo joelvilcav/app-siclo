@@ -26,15 +26,6 @@ import { useReports } from "@/hooks/use-reports"
 import { getSeriesKeys, transformReportResponse } from "@/lib/transform-report"
 import { formatDate } from "@/lib/format-date"
 
-const reservasPorMes = [
-  { name: "Ene", reservasConfirmadas: 450, reservasCanceladas: 45, reservasPendientes: 25 },
-  { name: "Feb", reservasConfirmadas: 520, reservasCanceladas: 38, reservasPendientes: 32 },
-  { name: "Mar", reservasConfirmadas: 680, reservasCanceladas: 52, reservasPendientes: 28 },
-  { name: "Abr", reservasConfirmadas: 720, reservasCanceladas: 48, reservasPendientes: 35 },
-  { name: "May", reservasConfirmadas: 850, reservasCanceladas: 65, reservasPendientes: 42 },
-  { name: "Jun", reservasConfirmadas: 920, reservasCanceladas: 58, reservasPendientes: 38 },
-]
-
 const transaccionesMercadoPago = [
   { name: "Ene", aprobadas: 385, pendientes: 25, rechazadas: 15, devueltas: 8 },
   { name: "Feb", transacciones: 445, pendientes: 18, rechazadas: 12, devueltas: 5 },
