@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import {
   DollarSign,
   Calendar,
@@ -232,6 +232,7 @@ export default function AnalyticsPage() {
   const [currentPageInactivos, setCurrentPageInactivos] = useState(1)
   const [currentPageInstructores, setCurrentPageInstructores] = useState(1)
 
+  const [hidden, setHidden] = useState<{ [key: string]: boolean }>({});
   const { dataStudio, dataInstructor, dataDiscipline, loading, error, fetchReports } = useReports();
 
   useEffect(() => {
@@ -242,7 +243,16 @@ export default function AnalyticsPage() {
   const dataDisciplineChart = dataDiscipline ? transformReportResponse(dataDiscipline) : [];
   const dataInstructorChart = dataInstructor ? transformReportResponse(dataInstructor) : [];
 
-  const itemsPerPage = 3
+  const itemsPerPage = 3;
+
+  const handleLegendClick = (o: any) => {
+    const { dataKey } = o;
+    setHidden((prev) => ({
+      ...prev,
+      [dataKey]: !prev[dataKey],
+    }));
+  };
+
 
   const paginate = (items: any[], currentPage: number) => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -450,8 +460,10 @@ export default function AnalyticsPage() {
                         strokeWidth={2}
                         dot={false}
                         name={key}
+                        hide={hidden[key]}
                       />
                     ))}
+                    <Legend onClick={handleLegendClick}/>
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -498,8 +510,10 @@ export default function AnalyticsPage() {
                         strokeWidth={2}
                         dot={false}
                         name={key}
+                        hide={hidden[key]}
                       />
                     ))}
+                    <Legend onClick={handleLegendClick}/>
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
