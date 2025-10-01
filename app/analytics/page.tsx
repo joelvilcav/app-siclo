@@ -22,6 +22,8 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useReports } from "@/hooks/use-reports"
+import { transformReportResponse } from "@/lib/transform-report"
 
 const ingresosPorEstudio = [
   { name: "Lun", miraflores: 2500, sanIsidro: 3200, surco: 1800, limaCentro: 2100 },
@@ -228,68 +230,28 @@ const metodosPago = [
 ]
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const colors = [
+  { stroke: "#FF6B6B", fill: "url(#colorMiraflores)" },
+  { stroke: "#4ECDC4", fill: "url(#colorSanIsidro)" },
+  { stroke: "#45B7D1", fill: "url(#colorSurco)" },
+  { stroke: "#96CEB4", fill: "url(#colorLimaCentro)" },
+];
 
 export default function AnalyticsPage() {
   const [currentPageVIP, setCurrentPageVIP] = useState(1)
   const [currentPageInactivos, setCurrentPageInactivos] = useState(1)
   const [currentPageInstructores, setCurrentPageInstructores] = useState(1)
 
-  const [dataStudio, setDataStudio] = useState<any[]>([]);
-  const [dataInstructor, setDataInstructor] = useState<any[]>([]);
-  const [dataDiscipline, setDataDiscipline] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [from, setFrom] = useState("2025-07-07");
-  const [to, setTo] = useState("2025-07-20");
-
-  const fetchReports = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // TODO: Fijar las fechas con el selector, por ahora -> hardcodeado
-        const from = "2025-07-07";
-        const to = "2025-07-20";
-
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No hay token, inicia sesión");
-
-        const [resStudio, resInstructor, resDiscipline] = await Promise.all([
-          fetch(`${API_BASE_URL}/reports/reservations?groupBy=studio&from=${from}&to=${to}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${API_BASE_URL}/reports/reservations?groupBy=instructor&from=${from}&to=${to}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${API_BASE_URL}/reports/reservations?groupBy=discipline&from=${from}&to=${to}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        if (!resStudio.ok || !resInstructor.ok || !resDiscipline.ok) {
-          throw new Error("Error en alguna petición");
-        }
-
-        const [studio, instructor, discipline] = await Promise.all([
-          resStudio.json(),
-          resInstructor.json(),
-          resDiscipline.json(),
-        ]);
-
-        setDataStudio(studio);
-        setDataInstructor(instructor);
-        setDataDiscipline(discipline);
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
+  const { dataStudio, dataInstructor, dataDiscipline, loading, error, fetchReports } = useReports();
 
   useEffect(() => {
-    fetchReports();
+    fetchReports("2025-07-07", "2025-07-20");
   }, []);
 
+  const dataStudioChart = dataStudio ? transformReportResponse(dataStudio) : [];
+  const seriesKeys = Object.keys(dataStudioChart[0] || {}).filter(
+    (key) => key !== "name"
+  );
   const itemsPerPage = 3
 
   const paginate = (items: any[], currentPage: number) => {
@@ -448,11 +410,11 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="bg-card shadow-sm border border-border">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-card-foreground">Ingresos por Estudio</CardTitle>
+                <CardTitle className="text-lg font-semibold text-card-foreground">Reservasiones por Estudio</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={ingresosPorEstudio}>
+                  <AreaChart data={dataStudioChart}>
                     <defs>
                       <linearGradient id="colorMiraflores" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#FF6B6B" stopOpacity={0.3} />
@@ -472,49 +434,34 @@ export default function AnalyticsPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6B7280" }} />
-                    <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12, fill: "#6B7280" }}
+                      ticks={
+                        dataStudioChart.length > 0
+                        ? [dataStudioChart[0]?.name, dataStudioChart[dataStudioChart.length - 1]?.name]
+                        : []
+                      }
+                      tickFormatter={(value) => String(value)}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: "#6B7280" }} 
+                      tickFormatter={(value) => `${value}`}
+                    />
                     <Tooltip />
-                    <Area
-                      type="monotone"
-                      dataKey="miraflores"
-                      stroke="#FF6B6B"
-                      fillOpacity={1}
-                      fill="url(#colorMiraflores)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Miraflores"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="sanIsidro"
-                      stroke="#4ECDC4"
-                      fillOpacity={1}
-                      fill="url(#colorSanIsidro)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="San Isidro"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="surco"
-                      stroke="#45B7D1"
-                      fillOpacity={1}
-                      fill="url(#colorSurco)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Surco"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="limaCentro"
-                      stroke="#96CEB4"
-                      fillOpacity={1}
-                      fill="url(#colorLimaCentro)"
-                      strokeWidth={2}
-                      dot={false}
-                      name="Lima Centro"
-                    />
+                    {seriesKeys.map((key, index) => (
+                      <Area
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={colors[index % colors.length].stroke}
+                        fillOpacity={1}
+                        fill={colors[index % colors.length].fill}
+                        strokeWidth={2}
+                        dot={false}
+                        name={key}
+                      />
+                    ))}
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
