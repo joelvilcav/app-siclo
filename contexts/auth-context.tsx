@@ -1,11 +1,11 @@
 "use client"
 
-import { User } from "@/app/interfaces/user";
 import type React from "react";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LoginResponse } from "@/app/interfaces/auth";
-import { UserCredentials } from "@/app/interfaces/user-credentials";
+import { User } from "@/interfaces/user";
+import { UserCredentials } from "@/interfaces/user-credentials";
+import { LoginResponse } from "@/interfaces/auth";
 
 interface AuthContextType {
   user: User | null;
