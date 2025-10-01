@@ -6,13 +6,7 @@ import { useRouter } from "next/navigation";
 import { User } from "@/interfaces/user";
 import { UserCredentials } from "@/interfaces/user-credentials";
 import { LoginResponse } from "@/interfaces/auth";
-
-interface AuthContextType {
-  user: User | null;
-  login: (userCredentials: UserCredentials) => Promise<boolean>;
-  logout: () => void;
-  isLoading: boolean;
-}
+import { AuthContextType } from "@/interfaces/auth-context";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
