@@ -24,6 +24,7 @@ import {
 import { useState, useEffect } from "react"
 import { useReports } from "@/hooks/use-reports"
 import { getSeriesKeys, transformReportResponse } from "@/lib/transform-report"
+import { formatDate } from "@/lib/format-date"
 
 const reservasPorMes = [
   { name: "Ene", reservasConfirmadas: 450, reservasCanceladas: 45, reservasPendientes: 25 },
@@ -442,13 +443,13 @@ export default function AnalyticsPage() {
                         ? [dataStudioChart[0]?.name, dataStudioChart[dataStudioChart.length - 1]?.name]
                         : []
                       }
-                      tickFormatter={(value) => String(value)}
+                      tickFormatter={(value) => formatDate(value)}
                     />
                     <YAxis 
                       tick={{ fontSize: 12, fill: "#6B7280" }} 
                       tickFormatter={(value) => `${value}`}
                     />
-                    <Tooltip />
+                    <Tooltip labelFormatter={(value) => formatDate(value)}/>
                     {getSeriesKeys(dataStudioChart).map((key, index) => (
                       <Area
                         key={key}
@@ -495,10 +496,10 @@ export default function AnalyticsPage() {
                         ? [dataDisciplineChart[0]?.name, dataDisciplineChart[dataDisciplineChart.length - 1]?.name]
                         : []
                       }
-                      tickFormatter={(value) => String(value)}
+                      tickFormatter={(value) => formatDate(value)}
                     />
                     <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
-                    <Tooltip />
+                    <Tooltip labelFormatter={(value) => formatDate(value)} />
                     {getSeriesKeys(dataDisciplineChart).map((key, index) => (
                       <Area
                         key={key}
