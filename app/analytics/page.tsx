@@ -242,8 +242,6 @@ export default function AnalyticsPage() {
   const dataDisciplineChart = dataDiscipline ? transformReportResponse(dataDiscipline) : [];
   const dataInstructorChart = dataInstructor ? transformReportResponse(dataInstructor) : [];
 
-  console.log('dataInstructorChart', dataInstructorChart);
-
   const itemsPerPage = 3
 
   const paginate = (items: any[], currentPage: number) => {
@@ -504,18 +502,6 @@ export default function AnalyticsPage() {
                     ))}
                   </AreaChart>
                 </ResponsiveContainer>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 text-sm gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-[#10B981] rounded-full"></div>
-                    <span className="text-[#6B7280]">Confirmadas</span>
-                    <span className="font-semibold text-[#1F2937]">920</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-[#EF4444] rounded-full"></div>
-                    <span className="text-[#6B7280]">Canceladas</span>
-                    <span className="font-semibold text-[#1F2937]">58</span>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
