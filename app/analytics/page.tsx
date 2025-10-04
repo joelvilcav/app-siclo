@@ -25,6 +25,8 @@ import { useState, useEffect } from "react"
 import { useReports } from "@/hooks/use-reports"
 import { getSeriesKeys, transformReportResponse } from "@/lib/transform-report"
 import { formatDate } from "@/lib/format-date"
+import { InteractiveChartLegend } from "@/components/interactive-chart-legend"
+import { useChartLegend } from "@/hooks/use-chart-legend"
 
 const transaccionesMercadoPago = [
   { name: "Ene", aprobadas: 385, pendientes: 25, rechazadas: 15, devueltas: 8 },
@@ -211,7 +213,6 @@ const metodosPago = [
   { metodo: "Efectivo", transacciones: 132, monto: "S/13,200", porcentaje: 13 },
 ]
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const colors = [
   { stroke: "#FF6B6B", fill: "url(#colorMiraflores)" },
   { stroke: "#4ECDC4", fill: "url(#colorSanIsidro)" },
@@ -224,13 +225,11 @@ export default function AnalyticsPage() {
   const [currentPageInactivos, setCurrentPageInactivos] = useState(1)
   const [currentPageInstructores, setCurrentPageInstructores] = useState(1)
 
-  const [hidden, setHidden] = useState<{ [key: string]: boolean }>({});
   const [startDate, setStartDate] = useState("2025-07-07");
   const [endDate, setEndDate] = useState("2025-07-20");
   const { dataStudio, dataInstructor, dataDiscipline, loading, error, fetchReports } = useReports();
 
   useEffect(() => {
-    console.log('Ejecutándome again!');
     fetchReports(startDate, endDate);
   }, []);
 
@@ -238,15 +237,11 @@ export default function AnalyticsPage() {
   const dataDisciplineChart = dataDiscipline ? transformReportResponse(dataDiscipline) : [];
   const dataInstructorChart = dataInstructor ? transformReportResponse(dataInstructor) : [];
 
-  const itemsPerPage = 3;
+  const { hidden: hiddenStudio, legendItems: legendStudioItems, visibleItems: visibleStudioItems, handleLegendClick: handleStudioLegend } = useChartLegend(dataStudioChart, colors);
+  const { hidden: hiddenDiscipline, legendItems: legendDisciplineItems, visibleItems: visibleDisciplineItems, handleLegendClick: handleDisciplineLegend } = useChartLegend(dataDisciplineChart, colors);
+  const { hidden: hiddenInstructor, legendItems: legendInstructorItems, visibleItems: visibleInstructorItems, handleLegendClick: handleInstructorLegend } = useChartLegend(dataInstructorChart, colors, true);
 
-  const handleLegendClick = (o: any) => {
-    const { dataKey } = o;
-    setHidden((prev) => ({
-      ...prev,
-      [dataKey]: !prev[dataKey],
-    }));
-  };
+  const itemsPerPage = 3;
 
   const paginate = (items: any[], currentPage: number) => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -407,8 +402,15 @@ export default function AnalyticsPage() {
         <TabsContent value="general" className="space-y-6">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             <Card className="bg-card shadow-sm border border-border">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-card-foreground">Reservasiones por Estudio</CardTitle>
+              <CardHeader className="pb-4 relative">
+                <CardTitle className="text-lg font-semibold text-card-foreground">Reservaciones por Estudio</CardTitle>
+                <InteractiveChartLegend
+                  category="Estudio"
+                  items={legendStudioItems}
+                  visibleItems={visibleStudioItems}
+                  onToggle={handleStudioLegend}
+                  showFinder={false}
+                />
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -458,18 +460,25 @@ export default function AnalyticsPage() {
                         strokeWidth={2}
                         dot={false}
                         name={key}
-                        hide={hidden[key]}
+                        hide={hiddenStudio[key]}
                       />
                     ))}
-                    <Legend onClick={handleLegendClick}/>
+                    <Legend onClick={handleStudioLegend}/>
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             <Card className="bg-card shadow-sm border border-border">
-              <CardHeader className="pb-4">
+              <CardHeader className="pb-4 relative">
                 <CardTitle className="text-lg font-semibold text-card-foreground">Reservaciones por Disciplina</CardTitle>
+                <InteractiveChartLegend
+                  category="Disciplina"
+                  items={legendDisciplineItems}
+                  visibleItems={visibleDisciplineItems}
+                  onToggle={handleDisciplineLegend}
+                  showFinder={false}
+                />
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -508,10 +517,10 @@ export default function AnalyticsPage() {
                         strokeWidth={2}
                         dot={false}
                         name={key}
-                        hide={hidden[key]}
+                        hide={hiddenDiscipline[key]}
                       />
                     ))}
-                    <Legend onClick={handleLegendClick}/>
+                    <Legend onClick={handleDisciplineLegend}/>
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -519,12 +528,19 @@ export default function AnalyticsPage() {
           </div>
 
           <Card className="bg-card shadow-sm border border-border">
-            <CardHeader className="pb-4">
+            <CardHeader className="pb-4 relative">
               <CardTitle className="text-lg font-semibold text-card-foreground">Reservaciones por Instructor</CardTitle>
+              <InteractiveChartLegend
+                category="Instructor"
+                items={legendInstructorItems}
+                visibleItems={visibleInstructorItems}
+                onToggle={handleInstructorLegend}
+                showFinder={true}
+              />
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={transaccionesMercadoPago}>
+                <AreaChart data={dataInstructorChart}>
                   <defs>
                     <linearGradient id="colorAprobadas" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
@@ -540,39 +556,32 @@ export default function AnalyticsPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#6B7280" }} />
+                  <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12, fill: "#6B7280" }}
+                      ticks={
+                        dataInstructorChart.length > 0
+                        ? [dataInstructorChart[0]?.name, dataInstructorChart[dataInstructorChart.length - 1]?.name]
+                        : []
+                      }
+                      tickFormatter={(value) => formatDate(value)}
+                    />
                   <YAxis tick={{ fontSize: 12, fill: "#6B7280" }} />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="aprobadas"
-                    stroke="#10B981"
-                    fillOpacity={1}
-                    fill="url(#colorAprobadas)"
-                    strokeWidth={2}
-                    dot={false}
-                    name="Aprobadas"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="pendientes"
-                    stroke="#F59E0B"
-                    fillOpacity={1}
-                    fill="url(#colorPendientes)"
-                    strokeWidth={2}
-                    dot={false}
-                    name="Pendientes"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="rechazadas"
-                    stroke="#EF4444"
-                    fillOpacity={1}
-                    fill="url(#colorRechazadas)"
-                    strokeWidth={2}
-                    dot={false}
-                    name="Rechazadas"
-                  />
+                  <Tooltip labelFormatter={(value) => formatDate(value)}/>
+                  {getSeriesKeys(dataInstructorChart).map((key, index) => (
+                      <Area
+                        key={key}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={colors[index % colors.length].stroke}
+                        fillOpacity={1}
+                        fill={colors[index % colors.length].fill}
+                        strokeWidth={2}
+                        dot={false}
+                        name={key}
+                        hide={hiddenInstructor[key]}
+                      />
+                    ))}
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>

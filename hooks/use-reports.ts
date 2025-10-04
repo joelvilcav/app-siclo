@@ -5,9 +5,9 @@ import { useState } from "react";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function useReports(): UseReportsResult {
-  const [dataStudio, setDataStudio] = useState<ReportResponse[] | null>(null);
-  const [dataInstructor, setDataInstructor] = useState<ReportResponse[] | null>(null);
-  const [dataDiscipline, setDataDiscipline] = useState<ReportResponse[] | null>(null);
+  const [dataStudio, setDataStudio] = useState<ReportResponse | null>(null);
+  const [dataInstructor, setDataInstructor] = useState<ReportResponse | null>(null);
+  const [dataDiscipline, setDataDiscipline] = useState<ReportResponse | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
