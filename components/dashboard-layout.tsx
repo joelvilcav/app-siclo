@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { BarChart3, Users, Calendar, FileText, Settings, LogOut, Upload, Moon, Sun } from "lucide-react"
+import { BarChart3, Users, Calendar, FileText, Settings, LogOut, Upload, Moon, Sun, UserCog } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTheme } from "@/components/theme-provider"
@@ -16,6 +16,7 @@ const navigation = [
   { name: "Clases", href: "/classes", icon: Calendar },
   { name: "Compras", href: "/purchases", icon: FileText },
   { name: "Importar", href: "/import", icon: Upload },
+  { name: "Gestión de usuarios", href: "/users", icon: UserCog },
   { name: "Configuración", href: "/settings", icon: Settings },
 ]
 
