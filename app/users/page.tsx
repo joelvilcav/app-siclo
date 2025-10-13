@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/dialog"
 import { Plus, Pencil, Trash2, Shield } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
+import { useUsers } from "@/hooks/use-users"
+import { useRoles } from "@/hooks/use-roles"
+import { log } from "console"
 
 // Mock data for users
 const mockUsers = [
@@ -82,12 +85,40 @@ const permissionModules = [
 ]
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(mockUsers)
-  const [roles, setRoles] = useState(mockRoles)
-  const [isNewUserOpen, setIsNewUserOpen] = useState(false)
-  const [isEditUserOpen, setIsEditUserOpen] = useState(false)
-  const [editingUser, setEditingUser] = useState<(typeof mockUsers)[0] | null>(null)
-  const [selectedRole, setSelectedRole] = useState<number | null>(null)
+  const [users2, setUsers] = useState(mockUsers);
+  const [isNewUserOpen, setIsNewUserOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<(typeof mockUsers)[0] | null>(null);
+  const [selectedRole, setSelectedRole] = useState<number | null>(null);
+
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<any>("");
+
+  const { users, loading, error, fetchUsers, createUser } = useUsers();
+  const { roles, fetchRoles } = useRoles();
+
+   useEffect(() => {
+    fetchUsers();
+    fetchRoles();
+  }, []);
+
+  const handleCreateUser = async () => {
+    setIsNewUserOpen(false);
+    const newUser = {
+      firstName,
+      lastName,
+      username,
+      email,
+      password,
+      isActive: true,
+      roles: [role]
+    };
+    await createUser(newUser);
+  }
 
   const handleEditUser = (user: (typeof mockUsers)[0]) => {
     setEditingUser(user)
@@ -104,7 +135,7 @@ export default function UsersPage() {
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case "Admin":
+      case "ADMIN":
         return "default"
       case "Instructor":
         return "secondary"
@@ -154,27 +185,35 @@ export default function UsersPage() {
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Nombre completo</Label>
-                        <Input id="name" placeholder="Juan Pérez" />
+                        <Label htmlFor="firstname">Nombres</Label>
+                        <Input id="firstname" placeholder="Luis Enrique" onChange={(e) => setFirstName(e.target.value)}/>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastname">Apellidos</Label>
+                        <Input id="lastname" placeholder="Sandoval López" onChange={(e) => setLastName(e.target.value)}/>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Nombre de usuario</Label>
+                        <Input id="username" placeholder="luisenrique" onChange={(e) => setUsername(e.target.value)}/>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="juan@example.com" />
+                        <Input id="email" type="email" placeholder="luissandoval@example.com" onChange={(e) => setEmail(e.target.value)}/>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="password">Contraseña</Label>
-                        <Input id="password" type="password" placeholder="••••••••" />
+                        <Input id="password" type="password" placeholder="••••••••" onChange={(e) => setPassword(e.target.value)}/>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="role">Rol</Label>
-                        <Select>
+                        <Select onValueChange={(value) => setRole(value)}>
                           <SelectTrigger id="role">
                             <SelectValue placeholder="Selecciona un rol" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="admin">Admin</SelectItem>
-                            <SelectItem value="instructor">Instructor</SelectItem>
-                            <SelectItem value="recepcion">Recepción</SelectItem>
+                            {roles.map((role) => (
+                              <SelectItem key={role.id} value={role}>{role.name}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -183,7 +222,7 @@ export default function UsersPage() {
                       <Button variant="outline" onClick={() => setIsNewUserOpen(false)}>
                         Cancelar
                       </Button>
-                      <Button onClick={() => setIsNewUserOpen(false)}>Crear usuario</Button>
+                      <Button onClick={handleCreateUser}>Crear usuario</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -203,14 +242,14 @@ export default function UsersPage() {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
+                      <TableCell className="font-medium">{user.username}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
+                        <Badge variant={getRoleBadgeVariant(user.role)}>{user.roles[0].name}</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(user.status)}>
-                          {user.status === "active" ? "Activo" : "Inactivo"}
+                          {user.isActive === true ? "Activo" : "Inactivo"}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
