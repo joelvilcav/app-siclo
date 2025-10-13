@@ -101,7 +101,7 @@ export default function UsersPage() {
   const { users, loading, error, fetchUsers, createUser } = useUsers();
   const { roles, fetchRoles } = useRoles();
 
-   useEffect(() => {
+  useEffect(() => {
     fetchUsers();
     fetchRoles();
   }, []);
