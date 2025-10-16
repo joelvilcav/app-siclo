@@ -1,10 +1,11 @@
 import { Role } from "./role";
 
 export interface User {
-  id: number;
+  id?: number;
   username: string;
   email: string;
   firstName: string;
   lastName: string;
-  roles: Role[];
+  roles?: Role[];
+  isActive?: boolean;
 }

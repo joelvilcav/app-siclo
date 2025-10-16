@@ -22,15 +22,8 @@ import { Plus, Pencil, Trash2, Shield } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { useUsers } from "@/hooks/use-users"
 import { useRoles } from "@/hooks/use-roles"
-import { log } from "console"
-
-// Mock data for users
-const mockUsers = [
-  { id: 1, name: "Juan Pérez", email: "juan@example.com", role: "Admin", isActive: true },
-  { id: 2, name: "María García", email: "maria@example.com", role: "Instructor", isActive: true },
-  { id: 3, name: "Carlos López", email: "carlos@example.com", role: "Recepción", isActive: true },
-  { id: 4, name: "Ana Martínez", email: "ana@example.com", role: "Instructor", isActive: true },
-]
+import { capitalize } from "@/lib/utils"
+import { User } from "@/interfaces/user"
 
 // Mock data for roles and permissions
 const mockRoles = [
@@ -85,10 +78,9 @@ const permissionModules = [
 ]
 
 export default function UsersPage() {
-  const [users2, setUsers] = useState(mockUsers);
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
 
   const [firstName, setFirstName] = useState("");
@@ -98,7 +90,7 @@ export default function UsersPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<any>("");
 
-  const { users, loading, error, fetchUsers, createUser, updateUser, deleteUser } = useUsers();
+  const { users, fetchUsers, createUser, updateUser, deleteUser } = useUsers();
   const { roles, fetchRoles } = useRoles();
 
   useEffect(() => {
@@ -132,26 +124,6 @@ export default function UsersPage() {
       setEditingUser(null);
     }
   }
-
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return "default"
-      case "Instructor":
-        return "secondary"
-      case "Recepción":
-        return "outline"
-      default:
-        return "outline"
-    }
-  }
-
-  const getStatusBadgeVariant = (status: string) => {
-    return status === "active" ? "default" : "secondary"
-  }
-
-  console.log('editingUser', editingUser);
-  // console.log('edit role', editingUser?.roles[0].name);
 
   return (
     <div className="space-y-6">
@@ -209,13 +181,16 @@ export default function UsersPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="role">Rol</Label>
-                        <Select onValueChange={(value) => setRole(value)}>
+                        <Select onValueChange={(value) => {
+                          const selectedRole = roles.find((role) => role.name === value);
+                          setRole(selectedRole);
+                        }}>
                           <SelectTrigger id="role">
                             <SelectValue placeholder="Selecciona un rol" />
                           </SelectTrigger>
                           <SelectContent>
                             {roles.map((role) => (
-                              <SelectItem key={role.id} value={role}>{role.name}</SelectItem>
+                              <SelectItem key={role.id} value={role.name}>{capitalize(role.name)}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -235,7 +210,9 @@ export default function UsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead>Usuario</TableHead>
+                    <TableHead>Nombres</TableHead>
+                    <TableHead>Apellidos</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Rol</TableHead>
                     <TableHead>Estado</TableHead>
@@ -246,12 +223,14 @@ export default function UsersPage() {
                   {users.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.username}</TableCell>
+                      <TableCell className="font-medium">{user.firstName}</TableCell>
+                      <TableCell className="font-medium">{user.lastName}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>{user.roles[0].name}</Badge>
+                        <Badge variant={'outline'}>{capitalize(user.roles?.[0].name ?? '')}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(user.status)}>
+                        <Badge variant={'outline'}>
                           {user.isActive === true ? "Activo" : "Inactivo"}
                         </Badge>
                       </TableCell>
@@ -260,7 +239,7 @@ export default function UsersPage() {
                           <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => deleteUser(user.id)}>
+                          <Button variant="ghost" size="sm" onClick={() => deleteUser(user.id ?? 0)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -315,7 +294,7 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-role">Rol</Label>
                   <Select
-                    value={editingUser?.roles[0].name}
+                    value={editingUser?.roles?.[0].name}
                     onValueChange={(value) => {
                       const selectedRole = roles.find((role) => role.name === value)
                       setEditingUser(editingUser ? { ...editingUser, roles:[selectedRole] } : null)
@@ -326,7 +305,7 @@ export default function UsersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {roles.map((role) => (
-                        <SelectItem key={role.id} value={role.name}>{role.name}</SelectItem>
+                        <SelectItem key={role.id} value={role.name}>{capitalize(role.name)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

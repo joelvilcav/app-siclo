@@ -1,19 +1,15 @@
+import { User } from "@/interfaces/user";
 import { useState } from "react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export function useUsers() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
 
   const token = localStorage.getItem("token");
 
   const fetchUsers = async () => {
     try {
-      setLoading(true);
-      setError(null);
-
       if (!token) throw new Error("No hay token, inicia sesión");
 
       const res = await fetch(`${API_BASE_URL}/users?iod=roles`, {
@@ -25,15 +21,12 @@ export function useUsers() {
       const data = await res.json();
       setUsers(data);
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      console.log(err.message);
     }
   };
 
-  const createUser = async (newUser: any) => {
+  const createUser = async (newUser: User) => {
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: {
@@ -49,16 +42,12 @@ export function useUsers() {
       setUsers((prev) => [...prev, created]);
       return created;
     } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
+      console.log(err.message);
     }
   };
 
-  const updateUser = async (user: any) => {
+  const updateUser = async (user: User) => {
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
         method: "PUT",
         headers: {
@@ -76,16 +65,12 @@ export function useUsers() {
       );
       return updated;
     } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
+      console.log(err.message);
     }
   };
 
   const deleteUser = async (id: number) => {
     try {
-      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: "DELETE",
         headers: {
@@ -97,12 +82,9 @@ export function useUsers() {
 
       setUsers((prev) => prev.filter((user) => user.id !== id));
     } catch (err: any) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
+      console.log(err.message);
     }
   }
 
-  return { users, loading, error, fetchUsers, createUser, updateUser, deleteUser };
+  return { users, fetchUsers, createUser, updateUser, deleteUser };
 }
