@@ -23,7 +23,6 @@ export function useUsers() {
       if (!res.ok) throw new Error("Error al obtener usuarios");
 
       const data = await res.json();
-      console.log("users", data);
       setUsers(data);
     } catch (err: any) {
       setError(err.message);
@@ -47,7 +46,6 @@ export function useUsers() {
       if (!res.ok) throw new Error("Error al crear usuario");
 
       const created = await res.json();
-      console.log('created user', created);
       setUsers((prev) => [...prev, created]);
       return created;
     } catch (err: any) {
@@ -58,5 +56,53 @@ export function useUsers() {
     }
   };
 
-  return { users, loading, error, fetchUsers, createUser };
+  const updateUser = async (user: any) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(user),
+      });
+
+      if (!res.ok) throw new Error("Error al actualizar usuario");
+
+      const updated = await res.json();
+       setUsers((prev) =>
+        prev.map((u) => (u.id === updated.id ? updated : u))
+      );
+      return updated;
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUser = async (id: number) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/users/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Error al eliminar usuario");
+
+      setUsers((prev) => prev.filter((user) => user.id !== id));
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return { users, loading, error, fetchUsers, createUser, updateUser, deleteUser };
 }

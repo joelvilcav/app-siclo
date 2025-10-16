@@ -23,7 +23,6 @@ export function useRoles() {
       if (!res.ok) throw new Error("Error al obtener roles");
 
       const data = await res.json();
-      console.log("roles", data);
       setRoles(data);
     } catch (err: any) {
       setError(err.message);

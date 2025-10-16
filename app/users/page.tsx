@@ -26,10 +26,10 @@ import { log } from "console"
 
 // Mock data for users
 const mockUsers = [
-  { id: 1, name: "Juan Pérez", email: "juan@example.com", role: "Admin", status: "active" },
-  { id: 2, name: "María García", email: "maria@example.com", role: "Instructor", status: "active" },
-  { id: 3, name: "Carlos López", email: "carlos@example.com", role: "Recepción", status: "active" },
-  { id: 4, name: "Ana Martínez", email: "ana@example.com", role: "Instructor", status: "inactive" },
+  { id: 1, name: "Juan Pérez", email: "juan@example.com", role: "Admin", isActive: true },
+  { id: 2, name: "María García", email: "maria@example.com", role: "Instructor", isActive: true },
+  { id: 3, name: "Carlos López", email: "carlos@example.com", role: "Recepción", isActive: true },
+  { id: 4, name: "Ana Martínez", email: "ana@example.com", role: "Instructor", isActive: true },
 ]
 
 // Mock data for roles and permissions
@@ -88,7 +88,7 @@ export default function UsersPage() {
   const [users2, setUsers] = useState(mockUsers);
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<(typeof mockUsers)[0] | null>(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState<number | null>(null);
 
   const [firstName, setFirstName] = useState("");
@@ -98,7 +98,7 @@ export default function UsersPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<any>("");
 
-  const { users, loading, error, fetchUsers, createUser } = useUsers();
+  const { users, loading, error, fetchUsers, createUser, updateUser, deleteUser } = useUsers();
   const { roles, fetchRoles } = useRoles();
 
   useEffect(() => {
@@ -120,16 +120,16 @@ export default function UsersPage() {
     await createUser(newUser);
   }
 
-  const handleEditUser = (user: (typeof mockUsers)[0]) => {
-    setEditingUser(user)
-    setIsEditUserOpen(true)
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    setIsEditUserOpen(true);
   }
 
-  const handleSaveEditedUser = () => {
+  const handleSaveEditedUser = (user: any) => {
     if (editingUser) {
-      setUsers(users.map((u) => (u.id === editingUser.id ? editingUser : u)))
-      setIsEditUserOpen(false)
-      setEditingUser(null)
+      updateUser(user);
+      setIsEditUserOpen(false);
+      setEditingUser(null);
     }
   }
 
@@ -149,6 +149,9 @@ export default function UsersPage() {
   const getStatusBadgeVariant = (status: string) => {
     return status === "active" ? "default" : "secondary"
   }
+
+  console.log('editingUser', editingUser);
+  // console.log('edit role', editingUser?.roles[0].name);
 
   return (
     <div className="space-y-6">
@@ -257,7 +260,7 @@ export default function UsersPage() {
                           <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => deleteUser(user.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -276,12 +279,28 @@ export default function UsersPage() {
                 <DialogDescription>Modifica los datos del usuario</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-name">Nombre completo</Label>
+              <div className="space-y-2">
+                  <Label htmlFor="edit-name">Nombres</Label>
                   <Input
-                    id="edit-name"
-                    value={editingUser?.name || ""}
-                    onChange={(e) => setEditingUser(editingUser ? { ...editingUser, name: e.target.value } : null)}
+                    id="edit-firstname"
+                    value={editingUser?.firstName || ""}
+                    onChange={(e) => setEditingUser(editingUser ? { ...editingUser, firstName: e.target.value } : null)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-lastname">Apellidos</Label>
+                  <Input
+                    id="edit-lastname"
+                    value={editingUser?.lastName || ""}
+                    onChange={(e) => setEditingUser(editingUser ? { ...editingUser, lastName: e.target.value } : null)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-username">Nombre de usuario</Label>
+                  <Input
+                    id="edit-username"
+                    value={editingUser?.username || ""}
+                    onChange={(e) => setEditingUser(editingUser ? { ...editingUser, username: e.target.value } : null)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -296,32 +315,28 @@ export default function UsersPage() {
                 <div className="space-y-2">
                   <Label htmlFor="edit-role">Rol</Label>
                   <Select
-                    value={editingUser?.role.toLowerCase().replace("ó", "o")}
+                    value={editingUser?.roles[0].name}
                     onValueChange={(value) => {
-                      const roleMap: Record<string, string> = {
-                        admin: "Admin",
-                        instructor: "Instructor",
-                        recepcion: "Recepción",
-                      }
-                      setEditingUser(editingUser ? { ...editingUser, role: roleMap[value] } : null)
+                      const selectedRole = roles.find((role) => role.name === value)
+                      setEditingUser(editingUser ? { ...editingUser, roles:[selectedRole] } : null)
                     }}
                   >
                     <SelectTrigger id="edit-role">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="instructor">Instructor</SelectItem>
-                      <SelectItem value="recepcion">Recepción</SelectItem>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.name}>{role.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-status">Estado</Label>
                   <Select
-                    value={editingUser?.status}
+                    value={editingUser?.isActive ? "active" : "inactive"}
                     onValueChange={(value) =>
-                      setEditingUser(editingUser ? { ...editingUser, status: value as "active" | "inactive" } : null)
+                      setEditingUser(editingUser ? { ...editingUser, isActive: value === "active" } : null)
                     }
                   >
                     <SelectTrigger id="edit-status">
@@ -344,7 +359,7 @@ export default function UsersPage() {
                 >
                   Cancelar
                 </Button>
-                <Button onClick={handleSaveEditedUser}>Guardar cambios</Button>
+                <Button onClick={() => handleSaveEditedUser(editingUser)}>Guardar cambios</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
