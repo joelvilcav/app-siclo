@@ -24,79 +24,43 @@ import { useUsers } from "@/hooks/use-users"
 import { useRoles } from "@/hooks/use-roles"
 import { capitalize } from "@/lib/utils"
 import { User } from "@/interfaces/user"
-
-// Mock data for roles and permissions
-const mockRoles = [
-  {
-    id: 1,
-    name: "Admin",
-    description: "Acceso completo al sistema",
-    permissions: {
-      dashboard: { view: true, edit: true, delete: true },
-      clients: { view: true, edit: true, delete: true },
-      classes: { view: true, edit: true, delete: true },
-      purchases: { view: true, edit: true, delete: true },
-      users: { view: true, edit: true, delete: true },
-      settings: { view: true, edit: true, delete: true },
-    },
-  },
-  {
-    id: 2,
-    name: "Instructor",
-    description: "Gestión de clases y clientes",
-    permissions: {
-      dashboard: { view: true, edit: false, delete: false },
-      clients: { view: true, edit: true, delete: false },
-      classes: { view: true, edit: true, delete: false },
-      purchases: { view: true, edit: false, delete: false },
-      users: { view: false, edit: false, delete: false },
-      settings: { view: false, edit: false, delete: false },
-    },
-  },
-  {
-    id: 3,
-    name: "Recepción",
-    description: "Gestión de clientes y compras",
-    permissions: {
-      dashboard: { view: true, edit: false, delete: false },
-      clients: { view: true, edit: true, delete: false },
-      classes: { view: true, edit: false, delete: false },
-      purchases: { view: true, edit: true, delete: false },
-      users: { view: false, edit: false, delete: false },
-      settings: { view: false, edit: false, delete: false },
-    },
-  },
-]
-
-const permissionModules = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "clients", label: "Clientes" },
-  { key: "classes", label: "Clases" },
-  { key: "purchases", label: "Compras" },
-  { key: "users", label: "Usuarios" },
-  { key: "settings", label: "Configuración" },
-]
+import { usePermissions } from "@/hooks/use-permissions"
+import { Role } from "@/interfaces/role"
 
 export default function UsersPage() {
   const [isNewUserOpen, setIsNewUserOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [selectedRole, setSelectedRole] = useState<number | null>(null);
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<any>("");
+  const [role, setRole] = useState<Role>({ id: 1, name: "USER", description: "Rol por defecto" });
 
   const { users, fetchUsers, createUser, updateUser, deleteUser } = useUsers();
-  const { roles, fetchRoles } = useRoles();
+  const { roles, fetchRoles, updateRole } = useRoles();
+  const { permissions, fetchPermissions } = usePermissions();
+
+  const selectedRole = roles.find((r) => r.id === selectedRoleId);
+  const hasPermission = (permissionId: number) => selectedPermissionIds.includes(permissionId);
 
   useEffect(() => {
     fetchUsers();
     fetchRoles();
+    fetchPermissions();
   }, []);
+
+  useEffect(() => {
+    if (selectedRole) {
+    setSelectedPermissionIds(selectedRole.permissions?.map(p => p.id) ?? []);
+    } else {
+      setSelectedPermissionIds([]);
+    }
+  }, [selectedRole]);
 
   const handleCreateUser = async () => {
     setIsNewUserOpen(false);
@@ -123,6 +87,25 @@ export default function UsersPage() {
       setIsEditUserOpen(false);
       setEditingUser(null);
     }
+  }
+
+  const handleTogglePermission = (permissionId: number) => {
+    setSelectedPermissionIds(prev =>
+      prev.includes(permissionId) ? prev.filter(id => id !== permissionId) : [...prev, permissionId]
+    );
+  };
+
+  const handleUpdateRole = async () => {
+    if (!selectedRole) return;
+     const updatedPermissionsObjects = permissions
+    .filter(p => selectedPermissionIds.includes(p.id));
+
+    const updatedRole = {
+      ...selectedRole,
+      permissions: updatedPermissionsObjects,
+    };
+
+    await updateRole(selectedRole.id, updatedRole);
   }
 
   return (
@@ -183,6 +166,7 @@ export default function UsersPage() {
                         <Label htmlFor="role">Rol</Label>
                         <Select onValueChange={(value) => {
                           const selectedRole = roles.find((role) => role.name === value);
+                          if (!selectedRole) return;
                           setRole(selectedRole);
                         }}>
                           <SelectTrigger id="role">
@@ -296,8 +280,9 @@ export default function UsersPage() {
                   <Select
                     value={editingUser?.roles?.[0].name}
                     onValueChange={(value) => {
-                      const selectedRole = roles.find((role) => role.name === value)
-                      setEditingUser(editingUser ? { ...editingUser, roles:[selectedRole] } : null)
+                      const selectedRole = roles.find((role) => role.name === value);
+                      if (!selectedRole) return;
+                      setEditingUser(editingUser ? { ...editingUser, roles: [selectedRole] } : null)
                     }}
                   >
                     <SelectTrigger id="edit-role">
@@ -349,26 +334,26 @@ export default function UsersPage() {
             {roles.map((role) => (
               <Card
                 key={role.id}
-                className={`cursor-pointer transition-colors ${selectedRole === role.id ? "border-primary" : ""}`}
-                onClick={() => setSelectedRole(role.id)}
+                className={`cursor-pointer transition-colors ${selectedRoleId === role.id ? "border-primary" : ""}`}
+                onClick={() => setSelectedRoleId(role.id)}
               >
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <Shield className="w-5 h-5 text-primary" />
-                    <CardTitle className="text-lg">{role.name}</CardTitle>
+                    <CardTitle className="text-lg">{capitalize(role.name)}</CardTitle>
                   </div>
-                  <CardDescription>{role.description}</CardDescription>
+                  <CardDescription>{capitalize(role.description)}</CardDescription>
                 </CardHeader>
               </Card>
             ))}
           </div>
 
-          {selectedRole && (
+          {selectedRoleId && (
             <Card>
               <CardHeader>
                 <CardTitle>Configurar permisos</CardTitle>
                 <CardDescription>
-                  Configura los permisos para el rol {roles.find((r) => r.id === selectedRole)?.name}
+                  Configura los permisos para el rol {(selectedRole?.name ?? '').toLocaleLowerCase()}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -376,28 +361,20 @@ export default function UsersPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Módulo</TableHead>
-                        <TableHead className="text-center">Ver</TableHead>
-                        <TableHead className="text-center">Editar</TableHead>
-                        <TableHead className="text-center">Eliminar</TableHead>
+                        <TableHead>Permisos</TableHead>
+                        <TableHead className="text-center">Habilitado</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {permissionModules.map((module) => {
-                        const rolePermissions = roles.find((r) => r.id === selectedRole)?.permissions[
-                          module.key as keyof (typeof roles)[0]["permissions"]
-                        ]
+                      {permissions.map((permission) => {
                         return (
-                          <TableRow key={module.key}>
-                            <TableCell className="font-medium">{module.label}</TableCell>
+                          <TableRow key={permission.id}>
+                            <TableCell className="font-medium">{permission.description}</TableCell>
                             <TableCell className="text-center">
-                              <Switch checked={rolePermissions?.view} />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={rolePermissions?.edit} />
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Switch checked={rolePermissions?.delete} />
+                              <Switch 
+                                checked={hasPermission(permission.id)} 
+                                onCheckedChange={() => handleTogglePermission(permission.id)}
+                              />
                             </TableCell>
                           </TableRow>
                         )
@@ -405,7 +382,9 @@ export default function UsersPage() {
                     </TableBody>
                   </Table>
                   <div className="flex justify-end">
-                    <Button>Guardar cambios</Button>
+                    <Button onClick={handleUpdateRole}>
+                      Guardar cambios
+                    </Button>
                   </div>
                 </div>
               </CardContent>
