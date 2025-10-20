@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
@@ -17,7 +16,6 @@ import {
   TrendingUp,
   AlertTriangle,
   MapPin,
-  Filter,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
@@ -260,34 +258,9 @@ export default function AnalyticsPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <Label className="text-sm text-muted-foreground">Filtros:</Label>
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <Label className="text-sm text-muted-foreground">Rango de fechas:</Label>
           </div>
-
-          <Select>
-            <SelectTrigger className="w-[140px] h-9">
-              <SelectValue placeholder="Disciplina" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="yoga">Yoga</SelectItem>
-              <SelectItem value="crossfit">CrossFit</SelectItem>
-              <SelectItem value="pilates">Pilates</SelectItem>
-              <SelectItem value="spinning">Spinning</SelectItem>
-              <SelectItem value="zumba">Zumba</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select>
-            <SelectTrigger className="w-[140px] h-9">
-              <SelectValue placeholder="Instructor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sofia">Sofia Ramírez</SelectItem>
-              <SelectItem value="diego">Diego Morales</SelectItem>
-              <SelectItem value="isabella">Isabella Cruz</SelectItem>
-              <SelectItem value="andres">Andrés Vega</SelectItem>
-            </SelectContent>
-          </Select>
 
           <div className="flex items-center gap-2">
             <Input type="date" className="w-[160px] h-9" onChange={(e) => setStartDate(e.target.value)}/>
