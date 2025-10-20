@@ -12,54 +12,49 @@ import {
   Download,
 } from "lucide-react";
 import { useState } from "react";
+import { UploadedFiles } from "@/interfaces/file-type";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// TODO: Crear un TYPE para "class | purchases"
-
 export default function ImportPage() {
-  const [uploadedFiles, setUploadedFiles] = useState<{
-    [key: string]: File | null;
-  }>({
-    class: null,
-    purchases: null,
-  });
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFiles>({ class: null, payments: null });
 
-  const handleFileUpload = (type: "class" | "purchases", file: File | null) => {
+  const handleFileUpload = (type: keyof UploadedFiles, file: File | null) => {
     setUploadedFiles((prev) => ({
       ...prev,
       [type]: file,
     }));
   };
 
-  const uploadFile = async (type: "class" | "purchases") => {
-    console.log('Uploading File');
+  const uploadFile = async (type: keyof UploadedFiles) => {
     const file = uploadedFiles[type];
     if (!file) return;
 
-    console.log('pase?');
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-      const res = await fetch(
-        type === "class"
-          ? `${API_BASE_URL}/files/upload/reservations`
-          : `${API_BASE_URL}/files/upload/purchases`, // Falta modificar esto
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const endpoint = type === "class"
+        ? `${API_BASE_URL}/files/upload/reservations`
+        : `${API_BASE_URL}/files/upload/payments`;
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       if (!res.ok) throw new Error("Error en el POST");
 
-      const result = await res.json();
-      console.log("Éxito:", result);
-      alert(`Archivo de ${type} subido con éxito ✅`);
+      const result = await res.text();
+      console.log(`File uploaded with: ${result}`);
     } catch (err) {
       console.error(err);
-      alert(`Error al subir ${type} ❌`);
     }
   };
 
@@ -205,24 +200,24 @@ export default function ImportPage() {
                     accept=".xlsx,.xls"
                     className="mt-4"
                     onChange={(e) =>
-                      handleFileUpload("purchases", e.target.files?.[0] || null)
+                      handleFileUpload("payments", e.target.files?.[0] || null)
                     }
                   />
                 </div>
 
-                {uploadedFiles.purchases && (
+                {uploadedFiles.payments && (
                   <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                     <span className="text-sm text-green-800">
-                      {uploadedFiles.purchases.name}
+                      {uploadedFiles.payments.name}
                     </span>
                   </div>
                 )}
 
                 <Button
                   className="w-full bg-[#6366F1] hover:bg-[#5B5BD6]"
-                  disabled={!uploadedFiles.purchases}
-                  onClick={() => uploadFile("purchases")}
+                  disabled={!uploadedFiles.payments}
+                  onClick={() => uploadFile("payments")}
                 >
                   Procesar Archivo de Compras
                 </Button>
