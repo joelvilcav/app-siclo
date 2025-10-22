@@ -17,7 +17,7 @@ const navigation = [
   { name: "Compras", href: "/purchases", icon: FileText },
   { name: "Importar", href: "/import", icon: Upload },
   { name: "Gestión de usuarios", href: "/users", icon: UserCog },
-  { name: "Configuración", href: "/settings", icon: Settings },
+  // { name: "Configuración", href: "/settings", icon: Settings },
 ]
 
 interface DashboardLayoutProps {
