@@ -32,7 +32,7 @@ export default function LoginPage() {
       if (success) {
         router.push("/analytics")
       } else {
-        setError("Credenciales incorrectas. Usa test@test.com / test123")
+        setError("Credenciales incorrectas.")
       }
     } catch (err) {
       setError("Error al iniciar sesión. Inténtalo de nuevo.")
