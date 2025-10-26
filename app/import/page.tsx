@@ -9,15 +9,24 @@ import {
   FileSpreadsheet,
   CheckCircle,
   AlertCircle,
-  Download,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UploadedFiles } from "@/interfaces/file-type";
+import { useMappings } from "@/hooks/use-mappings";
+import { Mapping } from "@/interfaces/mapping";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function ImportPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFiles>({ class: null, payments: null });
+  const { reservationsMapping, fetchReservationsMapping, paymentMapping, fetchPaymentMapping, updateMapping } = useMappings();
+  const [mappingToUpdate, setMappingToUpdate] = useState<Mapping[]>([]);
+  const [inputValues, setInputValues] = useState<{ [id: number]: string }>({});
+
+  useEffect(() => {
+    fetchReservationsMapping();
+    fetchPaymentMapping();
+  }, []);
 
   const handleFileUpload = (type: keyof UploadedFiles, file: File | null) => {
     setUploadedFiles((prev) => ({
@@ -56,6 +65,38 @@ export default function ImportPage() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleSaveChanges = async () => {
+    if (mappingToUpdate.length === 0) {
+      console.log("No hay cambios que guardar");
+      return;
+    }
+    await updateMapping(mappingToUpdate);
+    setMappingToUpdate([]);
+    setInputValues({});
+    await Promise.all([fetchReservationsMapping(), fetchPaymentMapping()]);
+  };
+
+  const handleInputChange = (mappingId: number, newHeader: string, type: string) => {
+    setInputValues((prev) => ({ ...prev, [mappingId]: newHeader }));
+    setMappingToUpdate((prev) => {
+      const existing = prev.find((m) => m.mappingId === mappingId);
+      if (existing) {
+        return prev.map((m) =>
+          m.mappingId === mappingId ? { ...m, excelHeader: newHeader } : m
+        );
+      } else {
+        const base =
+          type === 'reservations'
+            ? reservationsMapping.find((r) => r.mappingId === mappingId)
+            : paymentMapping.find((p) => p.mappingId === mappingId);
+
+        if (!base) return prev;
+
+        return [...prev, { ...base, excelHeader: newHeader }];
+      }
+    });
   };
 
   return (
@@ -145,30 +186,25 @@ export default function ImportPage() {
                   <p className="font-medium text-[#1F2937]">
                     Columnas requeridas:
                   </p>
-                  <ul className="space-y-1 text-[#6B7280]">
-                    <li>• ID Reserva</li>
-                    <li>• ID Clase</li>
-                    <li>• País</li>
-                    <li>• Ciudad</li>
-                    <li>• Disciplina</li>
-                    <li>• Estudio</li>
-                    <li>• Salón</li>
-                    <li>• Instructor</li>
-                    <li>• Día</li>
-                    <li>• Hora</li>
-                    <li>• Cliente</li>
-                    <li>• Creador del Pedido</li>
-                    <li>• Método de Pago</li>
-                    <li>• Estatus</li>
+                  <ul className="space-y-1 text-[#6B7280] max-h-72 overflow-y-scroll scrollbar-visible pr-5">
+                    {reservationsMapping.map((res) => (
+                      <div key={res.mappingId} className="mb-4">
+                        <li className="mb-1">{`• ${res.excelHeader}`}</li>
+                        <Input
+                          value={inputValues[res.mappingId!] ?? ""}
+                          onChange={(e) => handleInputChange(res.mappingId!, e.target.value, 'reservations')}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={handleSaveChanges}
+                        className="bg-[#6366F1] hover:bg-[#5B5BD6] text-white cursor-pointer"
+                      >
+                        Guardar Cambios
+                      </Button>
+                    </div>
                   </ul>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 bg-transparent"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar Plantilla
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -235,30 +271,25 @@ export default function ImportPage() {
                   <p className="font-medium text-[#1F2937]">
                     Columnas principales:
                   </p>
-                  <ul className="space-y-1 text-[#6B7280] max-h-48 overflow-y-auto">
-                    <li>• Fecha de compra</li>
-                    <li>• Fecha de acreditación</li>
-                    <li>• Fecha de liberación del dinero</li>
-                    <li>• Nombre de la contraparte</li>
-                    <li>• Nickname de la contraparte</li>
-                    <li>• E-mail de la contraparte</li>
-                    <li>• Teléfono de la contraparte</li>
-                    <li>• SKU Producto</li>
-                    <li>• Número de operación de Mercado Pago</li>
-                    <li>• Estado de la operación</li>
-                    <li>• Valor del producto</li>
-                    <li>• Tarifa de Mercado Pago</li>
-                    <li>• Monto recibido</li>
-                    <li>• Medio de pago</li>
+                  <ul className="space-y-1 text-[#6B7280] max-h-72 overflow-y-scroll scrollbar-visible pr-5">
+                    {paymentMapping.map((res) => (
+                      <div key={res.mappingId} className="mb-4">
+                        <li className="mb-1">{`• ${res.excelHeader}`}</li>
+                        <Input
+                          value={inputValues[res.mappingId!] ?? ""}
+                          onChange={(e) => handleInputChange(res.mappingId!, e.target.value, 'payment')}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleSaveChanges}
+                        className="bg-[#6366F1] hover:bg-[#5B5BD6] text-white cursor-pointer"
+                      >
+                        Guardar Cambios
+                      </Button>
+                    </div>
                   </ul>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 bg-transparent"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Descargar Plantilla
-                  </Button>
                 </div>
               </CardContent>
             </Card>
