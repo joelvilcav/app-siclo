@@ -7,6 +7,7 @@ import { User } from "@/interfaces/user";
 import { UserCredentials } from "@/interfaces/user-credentials";
 import { LoginResponse } from "@/interfaces/auth";
 import { AuthContextType } from "@/interfaces/auth-context";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,11 +23,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (token && userData) {
       try {
+        const decoded: { exp?: number } = jwtDecode(token);
+        const now = Date.now() / 1000;
+
+        if (!decoded.exp || decoded.exp < now) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("currentUser");
+          router.push("/login");
+          return;
+        }
+
         setUser(JSON.parse(userData));
       } catch (error) {
         localStorage.removeItem("token");
         localStorage.removeItem("currentUser");
+        router.push("/login");
       }
+    } else {
+      router.push("/login");
     }
     setIsLoading(false);
   }, []);
