@@ -8,7 +8,22 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, MoreHorizontal, Eye, Edit, Trash2, Users, UserCheck, UserX, TrendingUp } from "lucide-react"
+import {
+  Search,
+  Plus,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  Users,
+  UserCheck,
+  UserX,
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react"
 import Link from "next/link"
 
 // Sample client data
@@ -116,16 +131,68 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [countryFilter, setCountryFilter] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("")
+  const [appliedStatusFilter, setAppliedStatusFilter] = useState("all")
+  const [appliedCountryFilter, setAppliedCountryFilter] = useState("all")
+  const [appliedDateFrom, setAppliedDateFrom] = useState("")
+  const [appliedDateTo, setAppliedDateTo] = useState("")
+  const itemsPerPage = 10
+
+  const handleSearch = () => {
+    setAppliedSearchTerm(searchTerm)
+    setAppliedStatusFilter(statusFilter)
+    setAppliedCountryFilter(countryFilter)
+    setAppliedDateFrom(dateFrom)
+    setAppliedDateTo(dateTo)
+    setCurrentPage(1)
+  }
+
+  const handleClearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("all")
+    setCountryFilter("all")
+    setDateFrom("")
+    setDateTo("")
+    setAppliedSearchTerm("")
+    setAppliedStatusFilter("all")
+    setAppliedCountryFilter("all")
+    setAppliedDateFrom("")
+    setAppliedDateTo("")
+    setCurrentPage(1)
+  }
+
+  const hasActiveFilters =
+    appliedSearchTerm !== "" ||
+    appliedStatusFilter !== "all" ||
+    appliedCountryFilter !== "all" ||
+    appliedDateFrom !== "" ||
+    appliedDateTo !== ""
 
   const filteredClients = clientsData.filter((client) => {
     const matchesSearch =
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || client.status === statusFilter
-    const matchesCountry = countryFilter === "all" || client.country === countryFilter
+      client.name.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+      client.email.toLowerCase().includes(appliedSearchTerm.toLowerCase())
+    const matchesStatus = appliedStatusFilter === "all" || client.status === appliedStatusFilter
+    const matchesCountry = appliedCountryFilter === "all" || client.country === appliedCountryFilter
 
-    return matchesSearch && matchesStatus && matchesCountry
+    let matchesDate = true
+    if (appliedDateFrom || appliedDateTo) {
+      const clientDate = new Date(client.joinDate)
+      if (appliedDateFrom) matchesDate = matchesDate && clientDate >= new Date(appliedDateFrom)
+      if (appliedDateTo) matchesDate = matchesDate && clientDate <= new Date(appliedDateTo)
+    }
+
+    return matchesSearch && matchesStatus && matchesCountry && matchesDate
   })
+
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedClients = filteredClients.slice(startIndex, endIndex)
 
   const totalClients = clientsData.length
   const activeClients = clientsData.filter((c) => c.status === "Activo" || c.status === "VIP").length
@@ -211,40 +278,67 @@ export default function ClientsPage() {
           <CardTitle>Lista de Clientes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Buscar por nombre o email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar por nombre o email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="Activo">Activo</SelectItem>
+                  <SelectItem value="VIP">VIP</SelectItem>
+                  <SelectItem value="Inactivo">Inactivo</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={countryFilter} onValueChange={setCountryFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="País" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="España">España</SelectItem>
+                  <SelectItem value="México">México</SelectItem>
+                  <SelectItem value="Argentina">Argentina</SelectItem>
+                  <SelectItem value="Colombia">Colombia</SelectItem>
+                  <SelectItem value="Brasil">Brasil</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="Activo">Activo</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="Inactivo">Inactivo</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={countryFilter} onValueChange={setCountryFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="País" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="España">España</SelectItem>
-                <SelectItem value="México">México</SelectItem>
-                <SelectItem value="Argentina">Argentina</SelectItem>
-                <SelectItem value="Colombia">Colombia</SelectItem>
-                <SelectItem value="Brasil">Brasil</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                placeholder="Desde"
+                className="flex-1"
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                placeholder="Hasta"
+                className="flex-1"
+              />
+              <Button onClick={handleSearch} className="w-full sm:w-auto">
+                <Search className="w-4 h-4 mr-2" />
+                Buscar
+              </Button>
+              {hasActiveFilters && (
+                <Button onClick={handleClearFilters} variant="outline" className="w-full sm:w-auto bg-transparent">
+                  Limpiar
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Clients Table */}
@@ -263,7 +357,7 @@ export default function ClientsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClients.map((client) => (
+                {paginatedClients.map((client) => (
                   <TableRow key={client.id}>
                     <TableCell>
                       <div>
@@ -322,9 +416,69 @@ export default function ClientsPage() {
             </Table>
           </div>
 
-          {filteredClients.length === 0 && (
+          {paginatedClients.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">No se encontraron clientes que coincidan con los filtros.</p>
+            </div>
+          )}
+
+          {filteredClients.length > 0 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-gray-600">
+                Mostrando {startIndex + 1} a {Math.min(endIndex, filteredClients.length)} de {filteredClients.length}{" "}
+                clientes
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  title="Primera página"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  title="Última página"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

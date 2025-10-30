@@ -8,7 +8,22 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus, MoreHorizontal, Eye, Edit, Trash2, Calendar, Clock, Users, MapPin } from "lucide-react"
+import {
+  Search,
+  Plus,
+  MoreHorizontal,
+  Eye,
+  Edit,
+  Trash2,
+  Calendar,
+  Clock,
+  Users,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react"
 
 // Sample classes data based on the fields mentioned
 const classesData = [
@@ -183,19 +198,76 @@ export default function ClassesPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [disciplineFilter, setDisciplineFilter] = useState("all")
   const [countryFilter, setCountryFilter] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("")
+  const [appliedStatusFilter, setAppliedStatusFilter] = useState("all")
+  const [appliedDisciplineFilter, setAppliedDisciplineFilter] = useState("all")
+  const [appliedCountryFilter, setAppliedCountryFilter] = useState("all")
+  const [appliedDateFrom, setAppliedDateFrom] = useState("")
+  const [appliedDateTo, setAppliedDateTo] = useState("")
+  const itemsPerPage = 10
+
+  const handleSearch = () => {
+    setAppliedSearchTerm(searchTerm)
+    setAppliedStatusFilter(statusFilter)
+    setAppliedDisciplineFilter(disciplineFilter)
+    setAppliedCountryFilter(countryFilter)
+    setAppliedDateFrom(dateFrom)
+    setAppliedDateTo(dateTo)
+    setCurrentPage(1)
+  }
+
+  const handleClearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("all")
+    setDisciplineFilter("all")
+    setCountryFilter("all")
+    setDateFrom("")
+    setDateTo("")
+    setAppliedSearchTerm("")
+    setAppliedStatusFilter("all")
+    setAppliedDisciplineFilter("all")
+    setAppliedCountryFilter("all")
+    setAppliedDateFrom("")
+    setAppliedDateTo("")
+    setCurrentPage(1)
+  }
+
+  const hasActiveFilters =
+    appliedSearchTerm !== "" ||
+    appliedStatusFilter !== "all" ||
+    appliedDisciplineFilter !== "all" ||
+    appliedCountryFilter !== "all" ||
+    appliedDateFrom !== "" ||
+    appliedDateTo !== ""
 
   const filteredClasses = classesData.filter((classItem) => {
     const matchesSearch =
-      classItem.discipline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      classItem.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      classItem.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      classItem.studio.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || classItem.status === statusFilter
-    const matchesDiscipline = disciplineFilter === "all" || classItem.discipline === disciplineFilter
-    const matchesCountry = countryFilter === "all" || classItem.country === countryFilter
+      classItem.discipline.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+      classItem.instructor.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+      classItem.client.toLowerCase().includes(appliedSearchTerm.toLowerCase()) ||
+      classItem.studio.toLowerCase().includes(appliedSearchTerm.toLowerCase())
+    const matchesStatus = appliedStatusFilter === "all" || classItem.status === appliedStatusFilter
+    const matchesDiscipline = appliedDisciplineFilter === "all" || classItem.discipline === appliedDisciplineFilter
+    const matchesCountry = appliedCountryFilter === "all" || classItem.country === appliedCountryFilter
 
-    return matchesSearch && matchesStatus && matchesDiscipline && matchesCountry
+    let matchesDate = true
+    if (appliedDateFrom || appliedDateTo) {
+      const classDate = new Date(classItem.date)
+      if (appliedDateFrom) matchesDate = matchesDate && classDate >= new Date(appliedDateFrom)
+      if (appliedDateTo) matchesDate = matchesDate && classDate <= new Date(appliedDateTo)
+    }
+
+    return matchesSearch && matchesStatus && matchesDiscipline && matchesCountry && matchesDate
   })
+
+  const totalPages = Math.ceil(filteredClasses.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedClasses = filteredClasses.slice(startIndex, endIndex)
 
   const totalClasses = classesData.length
   const confirmedClasses = classesData.filter((c) => c.status === "Confirmada").length
@@ -286,53 +358,80 @@ export default function ClassesPage() {
           <CardTitle>Lista de Clases</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Buscar por disciplina, instructor, cliente o estudio..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar por disciplina, instructor, cliente o estudio..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="Confirmada">Confirmada</SelectItem>
+                  <SelectItem value="Pendiente">Pendiente</SelectItem>
+                  <SelectItem value="Cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={disciplineFilter} onValueChange={setDisciplineFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Disciplina" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {uniqueDisciplines.map((discipline) => (
+                    <SelectItem key={discipline} value={discipline}>
+                      {discipline}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={countryFilter} onValueChange={setCountryFilter}>
+                <SelectTrigger className="w-full sm:w-40">
+                  <SelectValue placeholder="País" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {uniqueCountries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="Confirmada">Confirmada</SelectItem>
-                <SelectItem value="Pendiente">Pendiente</SelectItem>
-                <SelectItem value="Cancelada">Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={disciplineFilter} onValueChange={setDisciplineFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Disciplina" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {uniqueDisciplines.map((discipline) => (
-                  <SelectItem key={discipline} value={discipline}>
-                    {discipline}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={countryFilter} onValueChange={setCountryFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="País" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {uniqueCountries.map((country) => (
-                  <SelectItem key={country} value={country}>
-                    {country}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                placeholder="Desde"
+                className="flex-1"
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                placeholder="Hasta"
+                className="flex-1"
+              />
+              <Button onClick={handleSearch} className="w-full sm:w-auto">
+                <Search className="w-4 h-4 mr-2" />
+                Buscar
+              </Button>
+              {hasActiveFilters && (
+                <Button onClick={handleClearFilters} variant="outline" className="w-full sm:w-auto bg-transparent">
+                  Limpiar
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Classes Table */}
@@ -354,7 +453,7 @@ export default function ClassesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredClasses.map((classItem) => (
+                {paginatedClasses.map((classItem) => (
                   <TableRow key={classItem.reservationId}>
                     <TableCell>
                       <div>
@@ -440,9 +539,69 @@ export default function ClassesPage() {
             </Table>
           </div>
 
-          {filteredClasses.length === 0 && (
+          {paginatedClasses.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">No se encontraron clases que coincidan con los filtros.</p>
+            </div>
+          )}
+
+          {filteredClasses.length > 0 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-gray-600">
+                Mostrando {startIndex + 1} a {Math.min(endIndex, filteredClasses.length)} de {filteredClasses.length}{" "}
+                clases
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                  title="Primera página"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Anterior
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Siguiente
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  title="Última página"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

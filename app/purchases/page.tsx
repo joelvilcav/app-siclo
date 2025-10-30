@@ -1,200 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Search,
-  MoreHorizontal,
-  Eye,
-  Download,
-  RefreshCw,
   CreditCard,
   DollarSign,
   TrendingUp,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react"
-
-// Sample purchases data based on Mercado Pago fields
-const purchasesData = [
-  {
-    operation_id: "MP001234567",
-    date_created: "2024-01-15T10:30:00Z",
-    date_approved: "2024-01-15T10:31:00Z",
-    date_released: "2024-01-16T10:31:00Z",
-    counterpart_name: "María González",
-    counterpart_nickname: "maria.gonzalez",
-    counterpart_email: "maria.gonzalez@email.com",
-    counterpart_phone_number: "+34 612 345 678",
-    buyer_document: "12345678A",
-    item_id: "YOGA_001",
-    reason: "Clase de Yoga Matutina",
-    external_reference: "REF_001",
-    seller_custom_field: "SKU_YOGA_MAT",
-    status: "approved",
-    status_detail: "accredited",
-    operation_type: "regular_payment",
-    transaction_amount: 25.0,
-    mercadopago_fee: 1.25,
-    marketplace_fee: 0.5,
-    shipping_cost: 0.0,
-    coupon_fee: 0.0,
-    net_received_amount: 23.25,
-    installments: 1,
-    payment_type: "credit_card",
-    amount_refunded: 0.0,
-    refund_operator: null,
-    claim_id: null,
-    chargeback_id: null,
-    marketplace: "MercadoPago",
-  },
-  {
-    operation_id: "MP001234568",
-    date_created: "2024-01-14T15:45:00Z",
-    date_approved: "2024-01-14T15:46:00Z",
-    date_released: "2024-01-15T15:46:00Z",
-    counterpart_name: "Carlos Rodríguez",
-    counterpart_nickname: "carlos.rodriguez",
-    counterpart_email: "carlos.rodriguez@email.com",
-    counterpart_phone_number: "+52 555 123 456",
-    buyer_document: "RFC123456789",
-    item_id: "CROSSFIT_001",
-    reason: "Clase de Crossfit Funcional",
-    external_reference: "REF_002",
-    seller_custom_field: "SKU_CROSSFIT",
-    status: "approved",
-    status_detail: "accredited",
-    operation_type: "regular_payment",
-    transaction_amount: 30.0,
-    mercadopago_fee: 1.5,
-    marketplace_fee: 0.6,
-    shipping_cost: 0.0,
-    coupon_fee: 2.0,
-    net_received_amount: 25.9,
-    installments: 3,
-    payment_type: "credit_card",
-    amount_refunded: 0.0,
-    refund_operator: null,
-    claim_id: null,
-    chargeback_id: null,
-    marketplace: "MercadoPago",
-  },
-  {
-    operation_id: "MP001234569",
-    date_created: "2024-01-13T09:20:00Z",
-    date_approved: "2024-01-13T09:21:00Z",
-    date_released: "2024-01-14T09:21:00Z",
-    counterpart_name: "Ana Martínez",
-    counterpart_nickname: "ana.martinez",
-    counterpart_email: "ana.martinez@email.com",
-    counterpart_phone_number: "+54 11 2345 6789",
-    buyer_document: "DNI87654321",
-    item_id: "PILATES_001",
-    reason: "Clase de Pilates Avanzado",
-    external_reference: "REF_003",
-    seller_custom_field: "SKU_PILATES_ADV",
-    status: "approved",
-    status_detail: "accredited",
-    operation_type: "regular_payment",
-    transaction_amount: 35.0,
-    mercadopago_fee: 1.75,
-    marketplace_fee: 0.7,
-    shipping_cost: 0.0,
-    coupon_fee: 0.0,
-    net_received_amount: 32.55,
-    installments: 1,
-    payment_type: "debit_card",
-    amount_refunded: 0.0,
-    refund_operator: null,
-    claim_id: null,
-    chargeback_id: null,
-    marketplace: "MercadoPago",
-  },
-  {
-    operation_id: "MP001234570",
-    date_created: "2024-01-12T18:30:00Z",
-    date_approved: null,
-    date_released: null,
-    counterpart_name: "Luis Fernández",
-    counterpart_nickname: "luis.fernandez",
-    counterpart_email: "luis.fernandez@email.com",
-    counterpart_phone_number: "+57 300 123 4567",
-    buyer_document: "CC98765432",
-    item_id: "SPINNING_001",
-    reason: "Clase de Spinning Intensivo",
-    external_reference: "REF_004",
-    seller_custom_field: "SKU_SPINNING",
-    status: "pending",
-    status_detail: "pending_payment",
-    operation_type: "regular_payment",
-    transaction_amount: 20.0,
-    mercadopago_fee: 0.0,
-    marketplace_fee: 0.0,
-    shipping_cost: 0.0,
-    coupon_fee: 0.0,
-    net_received_amount: 0.0,
-    installments: 1,
-    payment_type: "bank_transfer",
-    amount_refunded: 0.0,
-    refund_operator: null,
-    claim_id: null,
-    chargeback_id: null,
-    marketplace: "MercadoPago",
-  },
-  {
-    operation_id: "MP001234571",
-    date_created: "2024-01-11T14:15:00Z",
-    date_approved: "2024-01-11T14:16:00Z",
-    date_released: "2024-01-12T14:16:00Z",
-    counterpart_name: "Carmen López",
-    counterpart_nickname: "carmen.lopez",
-    counterpart_email: "carmen.lopez@email.com",
-    counterpart_phone_number: "+34 687 654 321",
-    buyer_document: "87654321B",
-    item_id: "ZUMBA_001",
-    reason: "Clase de Zumba",
-    external_reference: "REF_005",
-    seller_custom_field: "SKU_ZUMBA",
-    status: "refunded",
-    status_detail: "refunded",
-    operation_type: "regular_payment",
-    transaction_amount: 22.0,
-    mercadopago_fee: 1.1,
-    marketplace_fee: 0.44,
-    shipping_cost: 0.0,
-    coupon_fee: 0.0,
-    net_received_amount: 0.0,
-    installments: 1,
-    payment_type: "credit_card",
-    amount_refunded: 22.0,
-    refund_operator: "admin_user",
-    claim_id: "CLAIM_001",
-    chargeback_id: null,
-    marketplace: "MercadoPago",
-  },
-]
-
-const getStatusBadge = (status: string, statusDetail: string) => {
-  switch (status) {
-    case "approved":
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Aprobado</Badge>
-    case "pending":
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pendiente</Badge>
-    case "rejected":
-      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rechazado</Badge>
-    case "refunded":
-      return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Reembolsado</Badge>
-    case "cancelled":
-      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Cancelado</Badge>
-    default:
-      return <Badge variant="secondary">{status}</Badge>
-  }
-}
+import { usePaymentsView } from "@/hooks/use-payments-view"
 
 const getPaymentTypeBadge = (paymentType: string) => {
   switch (paymentType) {
@@ -229,30 +53,61 @@ const getPaymentTypeBadge = (paymentType: string) => {
 
 export default function PurchasesPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
   const [paymentTypeFilter, setPaymentTypeFilter] = useState("all")
-  const [dateFilter, setDateFilter] = useState("all")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
 
-  const filteredPurchases = purchasesData.filter((purchase) => {
-    const matchesSearch =
-      purchase.counterpart_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      purchase.counterpart_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      purchase.operation_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      purchase.reason.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "all" || purchase.status === statusFilter
-    const matchesPaymentType = paymentTypeFilter === "all" || purchase.payment_type === paymentTypeFilter
+  const {
+    paymentsTable,
+    visiblePurchases,
+    startIndex,
+    totalDisplay,
+    uniquePaymentTypes,
+    isClientFiltering,
+    currentPage,
+    clientTotalPages,
+    itemsPerPage,
+    getPaymentTable,
+    applyFilters,
+    clearFilters,
+    goFirst,
+    goPrev,
+    goNext,
+    goLast,
+  } = usePaymentsView();
 
-    return matchesSearch && matchesStatus && matchesPaymentType
-  })
+  useEffect(() => {
+    const rafId = requestAnimationFrame(() => {
+      getPaymentTable('2025-07-07', '2025-07-11', 0, itemsPerPage)
+    })
+    return () => cancelAnimationFrame(rafId)
+  }, [])
 
-  const totalTransactions = purchasesData.length
-  const approvedTransactions = purchasesData.filter((p) => p.status === "approved").length
-  const pendingTransactions = purchasesData.filter((p) => p.status === "pending").length
-  const totalRevenue = purchasesData
-    .filter((p) => p.status === "approved")
-    .reduce((sum, purchase) => sum + purchase.net_received_amount, 0)
+  const handleSearch = () => {
+    applyFilters({
+      searchTerm,
+      paymentType: paymentTypeFilter,
+      dateFrom,
+      dateTo,
+    })
+  }
 
-  const uniquePaymentTypes = [...new Set(purchasesData.map((p) => p.payment_type))]
+  const handleClearFilters = () => {
+    setSearchTerm("")
+    setPaymentTypeFilter("all")
+    setDateFrom("")
+    setDateTo("")
+    clearFilters()
+  }
+
+  const hasActiveFilters = isClientFiltering
+  const totalPages = isClientFiltering ? clientTotalPages : (paymentsTable?.totalPages ?? 1)
+  const endIndex = Math.max(startIndex - 1 + (visiblePurchases.length), 0)
+
+  const totalTransactions = paymentsTable?.totalElements ?? totalDisplay
+  const approvedTransactions = paymentsTable?.summary.operationSummary.approved ?? 0
+  const pendingTransactions = Math.max(0, totalTransactions - approvedTransactions)
+  const totalRevenue = paymentsTable?.summary.totalAmountReceived ?? 0
 
   return (
     <div className="space-y-6">
@@ -260,17 +115,7 @@ export default function PurchasesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Compras</h2>
-          <p className="text-gray-600 mt-1">Gestiona las transacciones de Mercado Pago</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="flex items-center gap-2 bg-transparent">
-            <RefreshCw className="w-4 h-4" />
-            Sincronizar
-          </Button>
-          <Button className="flex items-center gap-2">
-            <Download className="w-4 h-4" />
-            Exportar
-          </Button>
+          <p className="text-gray-600 mt-1">Gestiona las transacciones obtenidas</p>
         </div>
       </div>
 
@@ -323,7 +168,7 @@ export default function PurchasesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Ingresos Netos</p>
-                <p className="text-3xl font-bold text-purple-700">${totalRevenue.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-purple-700">S/ {totalRevenue.toFixed(2)}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-purple-600" />
@@ -343,27 +188,15 @@ export default function PurchasesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder="Buscar por cliente, email, operación o descripción..."
+                placeholder="Buscar por cliente, email, operación"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="approved">Aprobado</SelectItem>
-                <SelectItem value="pending">Pendiente</SelectItem>
-                <SelectItem value="rejected">Rechazado</SelectItem>
-                <SelectItem value="refunded">Reembolsado</SelectItem>
-                <SelectItem value="cancelled">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
+
             <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-44">
                 <SelectValue placeholder="Método de Pago" />
               </SelectTrigger>
               <SelectContent>
@@ -378,6 +211,36 @@ export default function PurchasesPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              placeholder="Desde"
+              className="w-full sm:w-40"
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              placeholder="Hasta"
+              className="w-full sm:w-40"
+            />
+
+            <Button onClick={handleSearch} className="w-full sm:w-auto">
+              <Search className="w-4 h-4 mr-2" />
+              Buscar
+            </Button>
+
+            {hasActiveFilters && (
+              <Button
+                onClick={handleClearFilters}
+                variant="outline"
+                className="w-full sm:w-auto bg-transparent"
+              >
+                Limpiar
+              </Button>
+            )}
           </div>
 
           {/* Purchases Table */}
@@ -393,117 +256,121 @@ export default function PurchasesPage() {
                   <TableHead>Comisiones</TableHead>
                   <TableHead>Neto</TableHead>
                   <TableHead>Método</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPurchases.map((purchase) => (
-                  <TableRow key={purchase.operation_id}>
+                {visiblePurchases.map((purchase) => (
+                  <TableRow key={purchase.operationId}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{purchase.operation_id}</div>
-                        <div className="text-sm text-gray-500">{purchase.external_reference}</div>
+                        <div className="font-medium">{purchase.operationId}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{purchase.counterpart_name}</div>
-                        <div className="text-sm text-gray-500">{purchase.counterpart_email}</div>
-                        <div className="text-sm text-gray-500">{purchase.counterpart_phone_number}</div>
+                        <div className="font-medium">{purchase.clientInfo?.name}</div>
+                        <div className="text-sm text-gray-500">{purchase.clientInfo?.email || '-'}</div>
+                        <div className="text-sm text-gray-500">{purchase.clientInfo?.phone}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{purchase.reason}</div>
-                        <div className="text-sm text-gray-500">ID: {purchase.item_id}</div>
-                        <div className="text-sm text-gray-500">SKU: {purchase.seller_custom_field}</div>
+                        <div className="font-medium">{purchase.packageName}</div>
+                        <div className="text-sm text-gray-500">Clases: {purchase.classCount}</div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
                         <div className="text-sm">
                           <span className="font-medium">Creado:</span>{" "}
-                          {new Date(purchase.date_created).toLocaleDateString("es-ES")}
+                          {purchase.purchaseDate ? new Date(purchase.purchaseDate).toLocaleDateString("es-ES") : '-'}
                         </div>
-                        {purchase.date_approved && (
+                        {purchase.accreditationDate && (
                           <div className="text-sm text-green-600">
                             <span className="font-medium">Aprobado:</span>{" "}
-                            {new Date(purchase.date_approved).toLocaleDateString("es-ES")}
+                            {new Date(purchase.accreditationDate).toLocaleDateString("es-ES")}
                           </div>
                         )}
-                        {purchase.date_released && (
+                        {purchase.releaseDate && (
                           <div className="text-sm text-blue-600">
                             <span className="font-medium">Liberado:</span>{" "}
-                            {new Date(purchase.date_released).toLocaleDateString("es-ES")}
+                            {new Date(purchase.releaseDate).toLocaleDateString("es-ES")}
                           </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">${purchase.transaction_amount.toFixed(2)}</div>
-                        {purchase.installments > 1 && (
+                        <div className="font-medium">S/{(purchase.productValue ?? 0).toFixed(2)}</div>
+                        {purchase.installments && purchase.installments > 1 && (
                           <div className="text-sm text-gray-500">{purchase.installments} cuotas</div>
-                        )}
-                        {purchase.coupon_fee > 0 && (
-                          <div className="text-sm text-green-600">-${purchase.coupon_fee.toFixed(2)} desc.</div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="text-sm text-red-600">MP: -${purchase.mercadopago_fee.toFixed(2)}</div>
-                        {purchase.marketplace_fee > 0 && (
-                          <div className="text-sm text-red-600">Plat: -${purchase.marketplace_fee.toFixed(2)}</div>
-                        )}
-                        {purchase.shipping_cost > 0 && (
-                          <div className="text-sm text-gray-600">Envío: ${purchase.shipping_cost.toFixed(2)}</div>
-                        )}
+                        <div className="text-sm text-red-600">Comisión: -S/{(purchase.transactionFee ?? 0).toFixed(2)}</div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium text-green-700">${purchase.net_received_amount.toFixed(2)}</div>
-                      {purchase.amount_refunded > 0 && (
-                        <div className="text-sm text-red-600">Reemb: -${purchase.amount_refunded.toFixed(2)}</div>
-                      )}
+                      <div className="font-medium text-green-700">S/{(purchase.amountReceived ?? 0).toFixed(2)}</div>
                     </TableCell>
-                    <TableCell>{getPaymentTypeBadge(purchase.payment_type)}</TableCell>
-                    <TableCell>{getStatusBadge(purchase.status, purchase.status_detail)}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Eye className="h-4 w-4" />
-                            Ver Detalles
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="flex items-center gap-2">
-                            <Download className="h-4 w-4" />
-                            Descargar Recibo
-                          </DropdownMenuItem>
-                          {purchase.status === "approved" && (
-                            <DropdownMenuItem className="flex items-center gap-2 text-red-600">
-                              <RefreshCw className="h-4 w-4" />
-                              Reembolsar
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    <TableCell>{getPaymentTypeBadge(purchase.paymentMethod || '')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
 
-          {filteredPurchases.length === 0 && (
+          {visiblePurchases.length === 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">No se encontraron transacciones que coincidan con los filtros.</p>
+            </div>
+          )}
+
+          {visiblePurchases.length > 0 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-gray-600">
+                Mostrando {startIndex} a {endIndex} de {totalDisplay} transacciones
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goFirst}
+                  disabled={isClientFiltering ? currentPage === 1 : (paymentsTable?.page ?? 0) === 0}
+                  title="Primera página"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goPrev}
+                  disabled={isClientFiltering ? currentPage === 1 : (paymentsTable?.page ?? 0) === 0}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goNext}
+                  disabled={isClientFiltering ? currentPage >= clientTotalPages : (paymentsTable?.page ?? 0) + 1 >= (paymentsTable?.totalPages ?? 1)}
+                >
+                  Siguiente
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goLast}
+                  disabled={isClientFiltering ? currentPage >= clientTotalPages : (paymentsTable?.page ?? 0) + 1 >= (paymentsTable?.totalPages ?? 1)}
+                  title="Última página"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
